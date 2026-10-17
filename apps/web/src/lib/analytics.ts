@@ -9,6 +9,9 @@ const TOKEN = import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN as string | unde
 // Our own subdomain in production, a reverse proxy to PostHog's EU servers, so blockers don't drop events.
 const HOST = import.meta.env.VITE_PUBLIC_POSTHOG_HOST as string | undefined
 
+/** Whether this build has analytics at all. Without it there's nothing optional to ask consent for. */
+export const ANALYTICS_ENABLED = Boolean(TOKEN && HOST)
+
 let client: PostHog | null = null
 let loading = false
 let userId: string | null = null

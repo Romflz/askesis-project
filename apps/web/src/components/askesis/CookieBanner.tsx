@@ -1,16 +1,18 @@
 import { Link } from '@tanstack/react-router'
 import { Cookie } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import { ANALYTICS_ENABLED } from '../../lib/analytics.ts'
 import { saveConsent, useConsent } from '../../lib/consent.ts'
 
 /**
  * Asks once for cookie consent, in a centered popup on every page until the
  * visitor chooses. Both choices are one click; the choice can be changed later
- * on /cookies.
+ * on /cookies. Builds without analytics only use essential cookies, so they
+ * never ask.
  */
 export function CookieBanner() {
   const consent = useConsent()
-  if (consent !== null) return null
+  if (!ANALYTICS_ENABLED || consent !== null) return null
   return <CookiePopup />
 }
 
