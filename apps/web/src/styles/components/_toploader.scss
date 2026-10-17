@@ -1,0 +1,44 @@
+// Route progress bar (components/askesis/TopLoader.tsx). Fixed above everything,
+// including the sticky top bar; transform-only, so it never triggers layout.
+
+.toploader {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 90;
+  height: 3px;
+  pointer-events: none;
+
+  &__bar {
+    height: 100%;
+    background: light-dark(color-mix(in oklab, var(--accent) 55%, var(--accent-ink)), var(--accent));
+    box-shadow: 0 0 10px color-mix(in oklab, var(--accent) 70%, transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    opacity: 0;
+  }
+
+  // Creeps toward 85% and slows down, like a real estimate would.
+  &[data-phase='loading'] &__bar {
+    opacity: 1;
+    transform: scaleX(0.85);
+    transition:
+      transform 8s cubic-bezier(0.08, 0.8, 0.2, 1),
+      opacity 150ms ease;
+  }
+
+  &[data-phase='done'] &__bar {
+    opacity: 0;
+    transform: scaleX(1);
+    transition:
+      transform 200ms ease-out,
+      opacity 200ms ease 180ms;
+  }
+
+  // Without motion: a steady full-width bar while loading, no creeping.
+  @media (prefers-reduced-motion: reduce) {
+    &[data-phase='loading'] &__bar {
+      transform: scaleX(1);
+      opacity: 0.85;
+    }
+  }
+}

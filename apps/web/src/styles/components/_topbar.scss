@@ -1,0 +1,461 @@
+@use '../mixins' as *;
+
+// The sticky top bar, the theme toggle's icons, the phone tab bar and the
+// install how-to popover.
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklab, var(--bg) 86%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 1280px;
+    height: 4rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+
+    @include up(sm) {
+      gap: 1.5rem;
+      padding: 0 1.5rem;
+    }
+
+    // Tablets and small laptops: six app links plus the stat pills need the room.
+    @include up(md) {
+      @include down(xl) {
+        gap: 1rem;
+      }
+    }
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+  }
+
+  &__wordmark {
+    font-size: 1.1rem;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+
+    @include down(sm) {
+      display: none;
+    }
+
+    // Tablets show the nav links instead; the logo still leads home.
+    @include up(md) {
+      @include down(lg) {
+        display: none;
+      }
+    }
+
+    // The dashboard's stat pills (longer numbers over time) keep that room until wide screens.
+    @include down(xl) {
+      .topbar__inner:has(.topbar__pill) & {
+        display: none;
+      }
+    }
+  }
+
+  &__nav {
+    display: none;
+    align-items: center;
+    gap: 0.25rem;
+
+    @include up(md) {
+      display: flex;
+    }
+  }
+
+  &__signin {
+    @include down(sm) {
+      display: none;
+    }
+  }
+
+  // The demo's stat pills make way for the sign-in buttons until there's room
+  // for both (tablets would otherwise overflow next to the nav links).
+  &__actions.is-guest &__pill {
+    @include down(lg) {
+      display: none;
+    }
+  }
+
+  &__menu-btn {
+    @include up(md) {
+      display: none;
+    }
+  }
+
+  // Repository link: an .icon-btn that never gets squeezed by the pills.
+  &__github {
+    flex-shrink: 0;
+  }
+
+  // Install app: in the markup everywhere, shown only where the head script
+  // found a way to install (<html data-install>), so it's there at first paint.
+  &__install-wrap {
+    position: relative;
+    display: none;
+    flex-shrink: 0;
+
+    :root[data-install] & {
+      display: block;
+    }
+
+    // The signed-in dashboard bar is full of stat pills below desktop widths,
+    // so the pills keep the room there (Settings has the install control too).
+    // Guests' bars hide their demo pills instead (above), so the icon fits.
+    @include down(lg) {
+      .topbar__actions:not(.is-guest):has(.topbar__pill) & {
+        display: none;
+      }
+    }
+  }
+
+  // Icon-only until there's room for the label; the label stays the accessible name.
+  &__install {
+    @include down(xl) {
+      width: 2.25rem;
+      padding: 0;
+      border-color: transparent;
+      color: var(--ink-2);
+    }
+
+    @include down(sm) {
+      width: 2rem;
+    }
+  }
+
+  &__install-label {
+    @include down(xl) {
+      @include visually-hidden;
+    }
+  }
+
+  // Phone menu for visitors: the panel unfolds (grid rows 0fr → 1fr, so no fixed
+  // height is needed) and the links fade in one after another.
+  &__sheet {
+    display: grid;
+    grid-template-rows: 0fr;
+    border-top: 1px solid transparent;
+    transition:
+      grid-template-rows 280ms var(--ease-out),
+      border-color 200ms ease;
+
+    &.is-open {
+      grid-template-rows: 1fr;
+      border-top-color: var(--line);
+    }
+
+    @include up(md) {
+      display: none;
+    }
+  }
+
+  &__sheet-inner {
+    display: grid;
+    gap: 0.25rem;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 1rem;
+    transition: padding 280ms var(--ease-out);
+
+    .is-open > & {
+      padding: 0.5rem 1rem 1rem;
+    }
+  }
+
+  &__sheet-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.7rem;
+    font-weight: 500;
+    opacity: 0;
+    translate: 0 -0.5rem;
+    transition:
+      opacity 160ms ease,
+      translate 160ms ease,
+      background-color 120ms ease;
+
+    .is-open & {
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity 260ms ease calc(60ms + var(--i, 0) * 45ms),
+        translate 320ms var(--ease-out) calc(60ms + var(--i, 0) * 45ms),
+        background-color 120ms ease;
+    }
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    svg {
+      color: var(--muted);
+    }
+  }
+
+  // The menu icon turns in when it swaps between ☰ and ×.
+  &__menu-icon {
+    display: grid;
+    place-items: center;
+    animation: menu-icon-in 260ms var(--ease-out);
+  }
+
+  &__link {
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.6rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
+
+    @include down(xl) {
+      padding-inline: 0.55rem;
+    }
+
+    &:hover {
+      color: var(--ink);
+      background: var(--surface-2);
+    }
+
+    &[aria-current='page'] {
+      color: var(--ink);
+      background: var(--surface);
+      box-shadow: 0 0 0 1px var(--line);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+
+    // Phones: tighter spacing and slimmer icon buttons (and pills, below), so
+    // the stats, the repo link, the theme toggle and the avatar fit at 360px.
+    @include down(sm) {
+      gap: 0.375rem;
+
+      .icon-btn {
+        width: 2rem;
+      }
+    }
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 2.25rem;
+    padding: 0 0.75rem 0 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    @include down(sm) {
+      gap: 0.35rem;
+      padding: 0 0.6rem 0 0.5rem;
+    }
+
+    &--streak svg {
+      color: var(--flame);
+      fill: color-mix(in oklab, var(--flame) 35%, transparent);
+    }
+
+    &--streak.is-at-risk svg {
+      color: var(--muted);
+      fill: none;
+    }
+  }
+
+  &__pill-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  &__avatar {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--xp), var(--c-young));
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+}
+
+// The theme toggle shows the icon of the theme you would switch to.
+.theme-icon-light,
+.theme-icon-dark {
+  display: none;
+}
+
+:root[data-theme='dark'] .theme-icon-light,
+:root[data-theme='light'] .theme-icon-dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .theme-icon-light {
+    display: block;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .theme-icon-dark {
+    display: block;
+  }
+}
+
+// ── Phone tab bar (signed-in) ───────────────────────────────────────────────
+
+.tabbar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 45;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: color-mix(in oklab, var(--bg) 90%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+
+  @include up(md) {
+    display: none;
+  }
+
+  &__item {
+    display: grid;
+    justify-items: center;
+    gap: 0.15rem;
+    padding: 0.4rem 0;
+    border-radius: 0.7rem;
+    font-size: 0.6875rem;
+    font-weight: 550;
+    color: var(--muted);
+
+    &[aria-current='page'] {
+      color: var(--ink);
+
+      svg {
+        color: var(--accent-ink);
+      }
+    }
+  }
+}
+
+// Keep page content and toasts clear of the tab bar on phones.
+@include down(md) {
+  body:has(.tabbar) {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+
+  body:has(.tabbar) .toasts {
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
+// ── Install how-to (iOS / Safari / browser menu) ────────────────────────────
+
+.install-pop {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 50;
+  width: 19rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-size: 0.875rem;
+  color: var(--ink-2);
+
+  // Phones: a sheet under the top bar, clear of the screen edges.
+  @include down(sm) {
+    position: fixed;
+    top: 4.5rem;
+    inset-inline: 1rem;
+    width: auto;
+  }
+
+  &__title {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  &__steps {
+    display: grid;
+    gap: 0.4rem;
+    padding-left: 1.2rem;
+    list-style: decimal;
+
+    strong {
+      font-weight: 600;
+      color: var(--ink);
+    }
+  }
+
+  &__glyph {
+    display: inline-block;
+    vertical-align: -0.15em;
+    color: var(--ink);
+  }
+
+  &__note {
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+// Signed-in bar at tablet widths: the nav links and every pill don't all fit, so
+// the level pill waits for desktop (the dashboard's Level card shows it too).
+// The coin pill has its own rule in home/_chest.scss.
+.topbar__pill:not(.topbar__pill--streak):not(.topbar__pill--coins) {
+  @include down(lg) {
+    display: none;
+  }
+}
+
+@keyframes menu-icon-in {
+  from {
+    opacity: 0;
+    rotate: -90deg;
+    scale: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar__sheet,
+  .topbar__sheet-inner,
+  .topbar__sheet-link {
+    transition: none !important;
+  }
+
+  .topbar__menu-icon {
+    animation: none;
+  }
+}

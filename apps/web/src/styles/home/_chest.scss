@@ -1,0 +1,400 @@
+@use '../mixins' as *;
+
+// Daily chest and coins, quest rewards and claiming, the top bar's coin pill, the
+// visitors' perks list, and the desktop column that holds the chest and quests.
+
+:root {
+  --coin: light-dark(#c98a06, #f5c542);
+}
+
+.coin-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+
+  svg {
+    color: var(--coin);
+  }
+}
+
+.chest {
+  --tier: #c47a3a;
+  --tier-2: #8f5222;
+
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+
+  &--silver {
+    --tier: #a7b1bf;
+    --tier-2: #6b7584;
+  }
+
+  &--gold {
+    --tier: #f0c03c;
+    --tier-2: #b07e0c;
+  }
+
+  &--diamond {
+    --tier: #7dd3fc;
+    --tier-2: #2f86c9;
+  }
+
+  &__stage {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__art {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    display: grid;
+    gap: 0.45rem;
+    justify-items: start;
+    min-width: 0;
+  }
+
+  &__lead,
+  &__result {
+    // Two lines reserved either way, so opening the chest doesn't move anything.
+    min-height: calc(2 * 1.5em);
+    font-size: 0.875rem;
+    color: var(--ink-2);
+
+    strong {
+      font-weight: 650;
+      color: var(--ink);
+    }
+  }
+
+  &__next {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+
+    svg {
+      color: #3aa0d8;
+    }
+  }
+
+  &__week {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+  }
+
+  &__open {
+    margin-top: 0.15rem;
+  }
+}
+
+.chest-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 5.5rem;
+  height: 5.5rem;
+
+  &__glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in oklab, var(--tier) 55%, transparent), transparent);
+  }
+
+  &__img {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+    filter: drop-shadow(0 6px 10px color-mix(in oklab, var(--tier-2) 35%, transparent));
+    user-select: none;
+  }
+
+  &:not(.is-open):not(.is-opening) &__img {
+    animation: chest-wiggle 3.2s ease-in-out infinite;
+    transform-origin: 50% 85%;
+  }
+
+  &.is-open &__img {
+    filter: drop-shadow(0 0 14px color-mix(in oklab, var(--tier) 60%, transparent)) saturate(1.1);
+  }
+}
+
+@keyframes chest-wiggle {
+  0%,
+  86%,
+  100% {
+    rotate: 0deg;
+  }
+
+  89% {
+    rotate: -5deg;
+  }
+
+  92% {
+    rotate: 5deg;
+  }
+
+  95% {
+    rotate: -2deg;
+  }
+}
+
+// The run of daily chests: seven slots, the last one is the weekly chest.
+.chest-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+
+  &__slot {
+    display: grid;
+    place-items: center;
+    height: 1.7rem;
+    border-radius: 0.5rem;
+    border: 1px dashed var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &__slot.is-done {
+    border: 0;
+    background: color-mix(in oklab, var(--tier) 30%, var(--surface));
+    color: var(--ink);
+  }
+
+  &__slot.is-today {
+    border: 1.5px solid var(--tier);
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  &__slot.is-weekly:not(.is-done) {
+    border-style: solid;
+    border-color: var(--coin);
+    color: var(--coin);
+  }
+}
+
+.chest--weekly .chest-art__img {
+  filter: drop-shadow(0 0 12px color-mix(in oklab, var(--coin) 70%, transparent));
+}
+
+// Quests: rewards and the claim button.
+.quest {
+  &__rewards {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+
+  &__coins {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-2);
+
+    svg {
+      color: var(--coin);
+    }
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__claim {
+    height: 1.75rem;
+    padding: 0 0.7rem;
+    font-size: 0.75rem;
+  }
+
+  &__claimed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--c-mature);
+  }
+}
+
+.quests__bonus {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--line-strong);
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+
+  svg {
+    flex-shrink: 0;
+    color: var(--xp);
+  }
+
+  &.is-claimed {
+    border-style: solid;
+    color: var(--muted);
+  }
+
+  strong {
+    font-weight: 650;
+    color: var(--ink);
+  }
+}
+
+// Coin pill in the top bar, from desktop widths up (the chest card shows the balance too).
+.topbar__pill--coins {
+  .coin-count {
+    font-size: inherit;
+  }
+
+  @include down(lg) {
+    display: none;
+  }
+}
+
+// Visitors: what an account adds, under the sample dashboard and analytics.
+.perks {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin-top: 0.35rem;
+    font-size: 1.35rem;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+  }
+
+  &__lead {
+    margin-top: 0.35rem;
+    max-width: 38rem;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+
+  &__cta {
+    flex-shrink: 0;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.75rem;
+
+    @include up(sm) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include up(lg) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}
+
+.perk {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.7rem;
+    color: var(--xp);
+    background: color-mix(in oklab, var(--xp) 12%, transparent);
+  }
+
+  &__title {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 650;
+  }
+
+  &__text {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+// Desktop: the chest and quests column matches the decks panel beside it, and
+// the quest list scrolls inside the card (without a visible scrollbar).
+@include up(lg) {
+  .area-quests {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    // The chest keeps its own height; the quests card takes the rest. height: auto
+    // undoes the grid's `> * > .panel { height: 100% }`.
+    > .chest {
+      flex: none;
+      height: auto;
+    }
+
+    > .quests {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      height: auto;
+    }
+  }
+
+  .quests__scroll {
+    flex: 1 1 0;
+    min-height: 15rem;
+    // Contained, so a long list never makes the row taller than the decks panel.
+    contain: size;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    // The faded bottom edge hints that the list scrolls.
+    mask-image: linear-gradient(#000 calc(100% - 1.5rem), transparent);
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}

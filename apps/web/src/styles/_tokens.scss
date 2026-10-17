@@ -1,0 +1,73 @@
+// Design tokens. Colors are CSS custom properties so the theme can switch at
+// runtime: light-dark() picks the step for the active color scheme. The OS
+// decides by default; <html data-theme> (the theme toggle) wins both ways.
+
+:root {
+  color-scheme: light dark;
+
+  --bg: light-dark(#f3f3ef, #07080b);
+  --surface: light-dark(#ffffff, #111217);
+  --surface-2: light-dark(#f6f6f2, #16181e);
+  --surface-3: light-dark(#ecece6, #1e2028);
+  --line: light-dark(rgb(12 14 20 / 0.08), rgb(255 255 255 / 0.07));
+  --line-strong: light-dark(rgb(12 14 20 / 0.14), rgb(255 255 255 / 0.13));
+  --ink: light-dark(#0c0e13, #eef0f4);
+  --ink-2: light-dark(#454a56, #a9adb9);
+  // Muted text stays at 4.5:1 or better on every surface, in both themes.
+  --muted: light-dark(#666a75, #878c97);
+
+  // Brand: chartreuse "signal", violet for XP and levels, ember for streaks.
+  --accent: #c6f432;
+  --accent-ink: light-dark(#4a6d00, #c6f432);
+  --on-accent: #0c0e13;
+  --xp: light-dark(#6d5cf0, #a397ff);
+  --flame: light-dark(#ea580c, #ff8a3d);
+  --frost: light-dark(#2b8fd6, #7cc4ff);
+
+  // Scrollbars: a quiet thumb in the theme's ink, accent-tinted under the pointer.
+  --scrollbar: color-mix(in oklab, var(--ink) 22%, transparent);
+  --scrollbar-hover: color-mix(in oklab, var(--accent-ink) 70%, transparent);
+
+  // Chart series, validated for colorblind separation on both surfaces.
+  --c-new: light-dark(#2a78d6, #3987e5);
+  --c-learn: light-dark(#eb6834, #d95926);
+  --c-relearn: light-dark(#6250d6, #9085e9);
+  --c-young: light-dark(#139b9b, #16a5a5);
+  --c-mature: #008300;
+  --c-again: light-dark(#e34948, #d93f4c);
+  --c-hard: light-dark(#eda100, #c98500);
+  --c-good: #008300;
+  --c-easy: light-dark(#2a78d6, #3987e5);
+  --c-suspended: light-dark(#b9bbc2, #4a4d57);
+  --grid: light-dark(#ecece6, #22242b);
+
+  // Heatmap: one hue; near-surface for "a little", loud for "a lot".
+  --heat-0: light-dark(#edede7, #191b21);
+  --heat-1: light-dark(oklch(0.92 0.08 125), oklch(0.34 0.07 134));
+  --heat-2: light-dark(oklch(0.82 0.15 128), oklch(0.5 0.12 131));
+  --heat-3: light-dark(oklch(0.67 0.16 136), oklch(0.68 0.17 128));
+  --heat-4: light-dark(oklch(0.5 0.13 142), oklch(0.88 0.2 124));
+
+  --tier-bronze: light-dark(#b8692f, #e09a62);
+  --tier-silver: light-dark(#6f7b8c, #c4ccd8);
+  --tier-gold: light-dark(#c08a00, #ffc83d);
+  --tier-platinum: light-dark(#5b6cf0, #9fb0ff);
+
+  --font-sans: 'Geist Variable', 'Geist Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono Fallback', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --radius-sm: 0.5rem;
+  --radius: 0.9rem;
+  --radius-lg: 1.25rem;
+  --shadow-card: light-dark(0 1px 2px rgb(12 14 20 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4));
+  --shadow-pop: light-dark(0 12px 32px -8px rgb(12 14 20 / 0.18), 0 16px 40px -8px rgb(0 0 0 / 0.7));
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

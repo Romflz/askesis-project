@@ -1,0 +1,39 @@
+// Entry point. Partials load in layers: fonts and foundation (tokens, reset,
+// keyframes), shared components, the home page sections, one partial per page,
+// and the legacy scaffold styles last.
+
+@use 'fonts';
+
+@use 'tokens';
+@use 'base';
+@use 'animations';
+
+@use 'components/ui';
+@use 'components/topbar';
+@use 'components/card-text';
+@use 'components/toploader';
+@use 'components/grade';
+
+@use 'home/layout';
+@use 'home/hero';
+@use 'home/progress';
+@use 'home/decks';
+@use 'home/heatmap';
+@use 'home/charts';
+@use 'home/trophies';
+@use 'home/chest';
+@use 'home/celebrations';
+@use 'home/guest';
+@use 'home/support';
+
+@use 'auth/auth';
+@use 'settings/settings';
+// Aliased because home/decks already uses the `decks` namespace.
+@use 'decks/decks' as decks-page;
+@use 'study/study';
+@use 'study/tag-filter';
+@use 'docs/docs';
+@use 'practice/practice';
+@use 'analytics/analytics';
+
+@use 'legacy';

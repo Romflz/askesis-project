@@ -1,0 +1,181 @@
+@use '../mixins' as *;
+
+// Full-screen celebrations: level-up and the daily chest ceremony.
+
+.celebrate {
+  --tier: var(--xp);
+
+  position: fixed;
+  inset: 0;
+  // Above everything else, including the top bar, toasts and the route loader.
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in oklab, var(--bg) 55%, rgb(0 0 0 / 0.55));
+  backdrop-filter: blur(6px);
+
+  &--bronze {
+    --tier: #c47a3a;
+  }
+
+  &--silver {
+    --tier: #a7b1bf;
+  }
+
+  &--gold {
+    --tier: #f0c03c;
+  }
+
+  &--diamond {
+    --tier: #7dd3fc;
+  }
+
+  &__card {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    width: min(26rem, 100%);
+    padding: 1.75rem 1.5rem 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+  }
+
+  &__kicker {
+    @include eyebrow;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 10rem;
+    height: 10rem;
+    margin: 0.25rem 0;
+  }
+
+  &__chest {
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
+  // Slowly turning light rays behind the badge or chest.
+  &__rays {
+    position: absolute;
+    inset: -1.5rem;
+    border-radius: 50%;
+    background:
+      radial-gradient(closest-side, color-mix(in oklab, var(--tier) 45%, transparent), transparent 70%),
+      repeating-conic-gradient(from 0deg, color-mix(in oklab, var(--tier) 22%, transparent) 0deg 10deg, transparent 10deg 30deg);
+    mask-image: radial-gradient(closest-side, #000 40%, transparent);
+    animation: celebrate-spin 14s linear infinite;
+  }
+
+  &.is-waiting &__rays {
+    opacity: 0.35;
+  }
+
+  &__badge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--xp) 70%, #fff), var(--xp));
+    box-shadow:
+      0 0 0 6px color-mix(in oklab, var(--xp) 25%, transparent),
+      0 12px 32px -8px color-mix(in oklab, var(--xp) 70%, transparent);
+    font-size: 2.6rem;
+    font-weight: 750;
+    letter-spacing: -0.04em;
+    color: #fff;
+    text-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  }
+
+  &__sparkle {
+    position: absolute;
+    color: var(--coin);
+    pointer-events: none;
+  }
+
+  &__chest-img {
+    position: relative;
+    width: 7rem;
+    height: 7rem;
+    filter: drop-shadow(0 10px 18px color-mix(in oklab, var(--tier) 45%, transparent));
+  }
+
+  &__title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  &__reward {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem 1.1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.is-waiting &__reward {
+    visibility: hidden;
+  }
+
+  &__coins {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    svg {
+      color: var(--coin);
+    }
+  }
+
+  &__sub {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+
+    strong {
+      font-weight: 650;
+      color: var(--ink);
+    }
+  }
+
+  &__extra {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #3aa0d8;
+  }
+
+  &__button {
+    margin-top: 0.85rem;
+  }
+}
+
+@keyframes celebrate-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+// The rays hold still rather than snapping through one quick turn.
+@media (prefers-reduced-motion: reduce) {
+  .celebrate__rays {
+    animation: none;
+  }
+}

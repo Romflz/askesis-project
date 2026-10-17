@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.*
+!.env.example
+.output
+.nitro
+.tanstack
+.vite
+dist
+coverage
+*.log
+*.tsbuildinfo
+.DS_Store

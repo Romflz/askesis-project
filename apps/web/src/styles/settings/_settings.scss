@@ -1,0 +1,644 @@
+@use '../mixins' as *;
+
+// Settings page: section nav, cards, form fields and switches, study presets with
+// their preview, deck assignment and reminders.
+
+.settings {
+  // Not positioned on purpose: the glow below then spans the full window width
+  // (the initial containing block) instead of stopping at this column's edges.
+  // isolation keeps its z-index: -1 in front of the page background.
+  isolation: isolate;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem 6rem;
+
+  @include up(sm) {
+    padding: 2.5rem 1.5rem 6rem;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    height: 28rem;
+    pointer-events: none;
+    background: radial-gradient(34rem 16rem at 10% 0%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 70%);
+  }
+
+  &__header {
+    max-width: 44rem;
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    margin-top: 0.5rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 650;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+  }
+
+  &__lead {
+    margin-top: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__layout {
+    display: grid;
+    gap: 1.5rem;
+
+    @include up(lg) {
+      grid-template-columns: 12rem minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  &__nav {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+
+    @include up(lg) {
+      position: sticky;
+      top: 5.5rem;
+      flex-direction: column;
+    }
+
+    a {
+      padding: 0.45rem 0.75rem;
+      border-radius: 0.6rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+
+      &:hover {
+        color: var(--ink);
+        background: var(--surface-2);
+      }
+    }
+  }
+
+  &__content {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+}
+
+.settings-card {
+  &__header {
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    margin-top: 0.35rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  &__description {
+    max-width: 46rem;
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+
+    &:empty {
+      display: none;
+    }
+  }
+}
+
+.settings-empty {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+// ── Fields ──────────────────────────────────────────────────────────────────
+
+.field-grid {
+  display: grid;
+  gap: 1.1rem 1rem;
+
+  @include up(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include up(xl) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 550;
+  }
+
+  &__control {
+    position: relative;
+
+    &.has-suffix .input {
+      padding-right: 4.5rem;
+    }
+  }
+
+  &__suffix {
+    position: absolute;
+    top: 50%;
+    right: 0.8rem;
+    translate: 0 -50%;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  &__help {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--muted);
+
+    &--error {
+      color: var(--c-again);
+    }
+  }
+
+  &.has-error .input {
+    border-color: var(--c-again);
+  }
+}
+
+.input {
+  width: 100%;
+  height: 2.6rem;
+  padding: 0 0.8rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    border-color: color-mix(in oklab, var(--ink) 25%, transparent);
+  }
+
+  // The border and ring show focus instead of the outline.
+  &:focus {
+    outline: none;
+    border-color: var(--accent-ink);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
+  }
+
+  // Hide number spinners; the fields are short and typed directly.
+  &[type='number'] {
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+// Native select restyled, with a chevron drawn from two gradients.
+.select {
+  appearance: none;
+  padding-right: 2.25rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.05rem) 55%,
+    calc(100% - 0.75rem) 55%;
+  background-size: 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.switch-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem;
+  margin-bottom: 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+
+  &__label {
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &__description {
+    margin-top: 0.2rem;
+    max-width: 34rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  transition: background-color 200ms ease;
+
+  &__thumb {
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+    transition: translate 200ms var(--ease-out);
+  }
+
+  &.is-on {
+    background: var(--accent);
+
+    .switch__thumb {
+      translate: 1.15rem 0;
+      background: var(--on-accent);
+    }
+  }
+}
+
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  &__value {
+    min-width: 3rem;
+    font-weight: 650;
+    text-align: right;
+  }
+}
+
+.range {
+  flex: 1;
+  accent-color: var(--accent-ink);
+  height: 2.6rem;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent-ink);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.save-status {
+  font-size: 0.8125rem;
+  color: var(--muted);
+
+  &--saved {
+    color: var(--c-mature);
+  }
+
+  &--error {
+    color: var(--c-again);
+  }
+}
+
+.btn--danger {
+  border: 1px solid var(--c-again);
+  background: var(--c-again);
+  color: #fff;
+}
+
+// ── Presets ─────────────────────────────────────────────────────────────────
+
+.preset-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.preset-tab {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 9rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &[aria-selected='true'] {
+    border-color: var(--accent-ink);
+    background: color-mix(in oklab, var(--accent) 10%, var(--surface));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+  }
+
+  &__meta {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  &--add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    border-style: dashed;
+    color: var(--muted);
+  }
+}
+
+.preset-editor {
+  display: grid;
+  gap: 1.5rem;
+
+  @include up(lg) {
+    grid-template-columns: minmax(0, 1fr) 19rem;
+    align-items: start;
+  }
+}
+
+.preset-form {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.preset-group {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    @include eyebrow;
+
+    width: 100%;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+.preset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+
+  &__secondary,
+  &__primary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.preset-preview {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(120% 60% at 100% 0%, color-mix(in oklab, var(--xp) 10%, transparent), transparent 70%), var(--surface-2);
+
+  @include up(lg) {
+    position: sticky;
+    top: 5.5rem;
+  }
+
+  > .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__label {
+    margin-bottom: 0.45rem;
+    font-size: 0.8125rem;
+    font-weight: 550;
+  }
+
+  &__review {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+
+  &__note {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}
+
+// "10m → 1d → 3d → …"
+.interval-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    & + li::before {
+      content: '→';
+      color: var(--muted);
+      font-weight: 400;
+    }
+  }
+}
+
+.review-cell {
+  --tone: var(--ink);
+
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: inset 0 2px 0 var(--tone);
+
+  &__value {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 650;
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &--again {
+    --tone: var(--c-again);
+  }
+
+  &--hard {
+    --tone: var(--c-hard);
+  }
+
+  &--good {
+    --tone: var(--c-good);
+  }
+
+  &--easy {
+    --tone: var(--c-easy);
+  }
+}
+
+// ── Decks, sample data ──────────────────────────────────────────────────────
+
+.deck-assign {
+  display: grid;
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, 16rem);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 0 0.7rem calc(var(--depth, 0) * 1.25rem);
+
+    & + & {
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  &__name {
+    display: grid;
+    min-width: 0;
+    font-weight: 550;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+}
+
+.sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+
+  > svg {
+    color: var(--muted);
+  }
+}
+
+// ── Reminders ───────────────────────────────────────────────────────────────
+
+.notify {
+  display: grid;
+  gap: 1rem;
+
+  &__status {
+    display: flex;
+    gap: 0.85rem;
+    padding: 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+
+    > svg {
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      color: var(--muted);
+    }
+
+    &--on {
+      border-color: color-mix(in oklab, var(--accent-ink) 40%, transparent);
+      background: color-mix(in oklab, var(--accent) 8%, var(--surface-2));
+
+      > svg {
+        color: var(--accent-ink);
+      }
+    }
+
+    &--denied > svg {
+      color: var(--c-again);
+    }
+  }
+
+  &__title {
+    font-weight: 600;
+  }
+
+  &__detail {
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__time {
+    margin-top: 1.25rem;
+  }
+}

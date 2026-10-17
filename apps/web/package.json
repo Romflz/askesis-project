@@ -1,0 +1,44 @@
+{
+  "name": "@askesis/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node --env-file-if-exists=../../.env .output/server/index.mjs",
+    "sitemap": "node scripts/generate-sitemap.mjs",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@askesis/contracts": "workspace:*",
+    "@askesis/core": "workspace:*",
+    "@floating-ui/react": "^0.27.20",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@tanstack/react-query": "^5.104.3",
+    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-router-ssr-query": "^1.167.3",
+    "@tanstack/react-start": "^1.169.1",
+    "better-auth": "^1.7.7",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "highlight.js": "^11.12.0",
+    "katex": "^0.19.0",
+    "lucide-react": "^1.57.0",
+    "motion": "^14.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^3.10.1",
+    "ts-fsrs": "^5.4.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "nitro": "3.0.260903-beta",
+    "sass": "^1.105.1",
+    "vite": "^8.3.4"
+  }
+}

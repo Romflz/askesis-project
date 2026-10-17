@@ -1,0 +1,180 @@
+@use '../mixins' as *;
+
+// The tags in the custom study popup. Tags show as a tree of "parent::child"
+// levels, with include/exclude buttons on every row.
+
+.tagf-heading {
+  @include eyebrow;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+
+  .link-button {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+}
+
+.tagf-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  .study-tag {
+    padding-right: 0.25rem;
+  }
+
+  &__remove {
+    display: grid;
+    place-items: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 999px;
+    color: var(--muted);
+
+    &:hover {
+      background: var(--surface-3);
+      color: var(--ink);
+    }
+  }
+}
+
+.tagf-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  // No scroll of its own: the dialog scrolls, and the list pages with "Show more".
+  padding: 0.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+}
+
+.tagf-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  padding-left: calc(var(--depth, 0) * 1rem);
+  border-radius: 0.55rem;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &__toggle {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-left: 0.2rem;
+    border-radius: 0.35rem;
+    color: var(--muted);
+    transition: rotate 150ms ease;
+
+    &:is(button):hover {
+      background: var(--surface-3);
+      color: var(--ink);
+    }
+
+    &.is-open {
+      rotate: 90deg;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-align: left;
+    color: var(--ink-2);
+  }
+
+  &__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__parent {
+    color: var(--muted);
+  }
+
+  &__sub {
+    flex-shrink: 0;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &__n {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  &__btns {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.2rem;
+    padding-right: 0.2rem;
+  }
+
+  &__btn {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.45rem;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+
+    &:hover {
+      color: var(--ink);
+      border-color: var(--line-strong);
+    }
+
+    &--in[aria-pressed='true'] {
+      border-color: var(--accent-ink);
+      background: color-mix(in oklab, var(--accent) 22%, var(--surface));
+      color: var(--accent-ink);
+    }
+
+    &--out[aria-pressed='true'] {
+      border-color: color-mix(in oklab, var(--c-again) 60%, transparent);
+      background: color-mix(in oklab, var(--c-again) 14%, var(--surface));
+      color: var(--c-again);
+    }
+  }
+
+  &.is-include &__name {
+    color: var(--ink);
+  }
+
+  &.is-exclude &__label {
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in oklab, var(--c-again) 70%, transparent);
+  }
+}
+
+.tagf-more {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+}

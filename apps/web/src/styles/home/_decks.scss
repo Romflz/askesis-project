@@ -1,0 +1,248 @@
+@use '../mixins' as *;
+
+// Deck table on the dashboard and the public home page.
+
+.decks {
+  &__scroll {
+    margin: 0 -0.5rem;
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: 0.7rem 0.5rem;
+      text-align: left;
+      vertical-align: middle;
+
+      @include down(sm) {
+        padding: 0.6rem 0.25rem;
+      }
+    }
+
+    thead th {
+      @include eyebrow;
+
+      padding-top: 0;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--line);
+      font-weight: 500;
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+.deck-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  &::before {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--dot);
+  }
+
+  &--new {
+    --dot: var(--c-new);
+  }
+
+  &--learning {
+    --dot: var(--c-learn);
+  }
+
+  &--review {
+    --dot: var(--c-mature);
+  }
+}
+
+.deck-row {
+  transition: background-color 120ms ease;
+
+  & + & > * {
+    border-top: 1px solid var(--line);
+  }
+
+  // !important: the solid border above comes from the more specific `& + & > *`.
+  &--child > * {
+    border-top-style: dashed !important;
+  }
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  > :first-child {
+    border-radius: 0.75rem 0 0 0.75rem;
+  }
+
+  > :last-child {
+    border-radius: 0 0.75rem 0.75rem 0;
+  }
+
+  &__name {
+    font-weight: inherit;
+
+    @include up(sm) {
+      min-width: 14rem;
+    }
+  }
+
+  &__name-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-left: calc(var(--depth, 0) * 1.75rem);
+
+    @include down(sm) {
+      gap: 0.45rem;
+      padding-left: calc(var(--depth, 0) * 0.85rem);
+    }
+  }
+
+  &__toggle,
+  &__toggle-spacer {
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    border-radius: 0.375rem;
+    color: var(--muted);
+  }
+
+  &__toggle {
+    transition:
+      transform 150ms ease,
+      background-color 150ms ease;
+
+    &:hover {
+      background: var(--surface-3);
+      color: var(--ink);
+    }
+
+    &.is-open {
+      transform: rotate(90deg);
+    }
+  }
+
+  &__label {
+    display: grid;
+    min-width: 0;
+  }
+
+  &__title {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+
+    @include up(sm) {
+      white-space: nowrap;
+    }
+  }
+
+  &--child &__title {
+    font-weight: 500;
+  }
+
+  &__sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+
+    @include up(sm) {
+      white-space: nowrap;
+    }
+  }
+
+  &__optional {
+    @include down(sm) {
+      display: none;
+    }
+  }
+
+  &__mastery {
+    width: 9rem;
+  }
+}
+
+// Counts keep ink-colored numbers; a colored underline carries the type.
+.deck-count {
+  display: inline-block;
+  min-width: 2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.45rem;
+  font-weight: 600;
+  text-align: center;
+  background: color-mix(in oklab, var(--dot) 13%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--dot) 70%, transparent);
+
+  &--new {
+    --dot: var(--c-new);
+  }
+
+  &--learning {
+    --dot: var(--c-learn);
+  }
+
+  &--review {
+    --dot: var(--c-mature);
+  }
+
+  &.is-zero {
+    background: none;
+    box-shadow: none;
+    color: var(--muted);
+    font-weight: 400;
+  }
+}
+
+.deck-mastery {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+
+  &__track {
+    flex: 1;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--surface-3);
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--c-mature);
+  }
+
+  span {
+    width: 2.25rem;
+    text-align: right;
+  }
+}
+
+// Signed-in dashboards: each deck row opens that deck in the deck manager.
+.deck-row.is-linked {
+  cursor: pointer;
+}
+
+.deck-row__link {
+  color: inherit;
+
+  &:hover,
+  .deck-row.is-linked:hover & {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+  }
+}

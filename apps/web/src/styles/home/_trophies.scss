@@ -1,0 +1,352 @@
+@use '../mixins' as *;
+
+// Trophy case, plus the toast stack the dashboard and the study session share.
+
+$tiers: 'bronze', 'silver', 'gold', 'platinum';
+
+.trophies {
+  &__tiers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+
+    @include up(sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include up(lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include up(xl) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    // Collapsed, the case shows two or three full rows at each width. Keep in
+    // sync with PREVIEW in Trophies.tsx.
+    &.is-collapsed > li {
+      @include down(sm) {
+        &:nth-child(n + 7) {
+          display: none;
+        }
+      }
+
+      @include up(sm) {
+        @include down(lg) {
+          &:nth-child(n + 9) {
+            display: none;
+          }
+        }
+      }
+
+      @include up(lg) {
+        @include down(xl) {
+          &:nth-child(n + 10) {
+            display: none;
+          }
+        }
+      }
+
+      @include up(xl) {
+        &:nth-child(n + 13) {
+          display: none;
+        }
+      }
+    }
+  }
+
+  &__more {
+    display: flex;
+    width: fit-content;
+    margin: 1rem auto 0;
+    color: var(--ink-2);
+
+    svg {
+      transition: rotate 150ms ease;
+    }
+
+    &[aria-expanded='true'] svg {
+      rotate: 180deg;
+    }
+
+    // Nothing is hidden at these widths, so there's nothing to toggle.
+    &.fits-sm {
+      @include up(sm) {
+        display: none;
+      }
+    }
+
+    &.fits-lg {
+      @include up(lg) {
+        display: none;
+      }
+    }
+
+    &.fits-xl {
+      @include up(xl) {
+        display: none;
+      }
+    }
+  }
+}
+
+.tier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 1.85rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+
+  &__gem {
+    width: 0.6rem;
+    height: 0.6rem;
+    rotate: 45deg;
+    border-radius: 2px;
+    background: var(--tier);
+  }
+
+  &__name {
+    text-transform: capitalize;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  @each $tier in $tiers {
+    &--#{$tier} {
+      --tier: var(--tier-#{$tier});
+    }
+  }
+}
+
+.trophy {
+  --tier: var(--tier-bronze);
+
+  position: relative;
+  display: flex;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  @each $tier in $tiers {
+    &--#{$tier} {
+      --tier: var(--tier-#{$tier});
+    }
+  }
+
+  &.is-unlocked:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--tier) 45%, transparent);
+    box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--tier) 70%, transparent);
+  }
+
+  // A medal: tier-colored disc with a soft rim and a highlight.
+  &__medal {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    color: #fff;
+    background:
+      radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.45), transparent 45%),
+      linear-gradient(145deg, var(--tier), color-mix(in oklab, var(--tier) 60%, #000));
+    box-shadow:
+      inset 0 0 0 2px color-mix(in oklab, var(--tier) 60%, #fff),
+      0 6px 16px -6px color-mix(in oklab, var(--tier) 80%, transparent);
+  }
+
+  &--platinum.is-unlocked &__medal {
+    background:
+      radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.55), transparent 45%),
+      linear-gradient(120deg, #9fb0ff, #c6f432, #a397ff, #7cc4ff, #9fb0ff);
+    background-size:
+      100% 100%,
+      300% 300%;
+    animation: iridescent 6s ease-in-out infinite;
+  }
+
+  &.is-locked &__medal {
+    color: var(--muted);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  &__new {
+    height: 1.15rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1.15rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__desc {
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__tier {
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: color-mix(in oklab, var(--tier) 22%, transparent);
+  }
+
+  &__progress {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.7rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}
+
+// ── Toasts ──────────────────────────────────────────────────────────────────
+
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.toast {
+  --tone: var(--xp);
+
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.8rem 0.8rem 0.8rem 0.85rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+
+  &--streak {
+    --tone: var(--flame);
+  }
+
+  &--goal {
+    --tone: var(--c-mature);
+  }
+
+  &--error {
+    --tone: var(--c-again);
+  }
+
+  &--level {
+    --tone: var(--xp);
+
+    border-color: color-mix(in oklab, var(--xp) 50%, transparent);
+    background:
+      radial-gradient(120% 140% at 0% 0%, color-mix(in oklab, var(--xp) 18%, transparent), transparent 60%), var(--surface);
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    border-radius: 0.7rem;
+    color: #fff;
+    background: var(--tone);
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 650;
+  }
+
+  &__detail {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__close {
+    align-self: flex-start;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.4rem;
+    color: var(--muted);
+
+    &:hover {
+      background: var(--surface-2);
+      color: var(--ink);
+    }
+  }
+}

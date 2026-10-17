@@ -1,0 +1,17 @@
+{
+  "name": "@askesis/core",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./demo": "./src/demo.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@askesis/contracts": "workspace:*",
+    "ts-fsrs": "^5.4.2"
+  }
+}

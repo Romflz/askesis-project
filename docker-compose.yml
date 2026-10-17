@@ -1,0 +1,16 @@
+# Local development database (pnpm db:up / db:down). The image adds dev
+# credentials and a health check to the official Postgres 18 image; see
+# docker/postgres/Dockerfile.
+services:
+  postgres:
+    build: ./docker/postgres
+    image: askesis/postgres:18
+    ports:
+      - '5432:5432'
+    volumes:
+      # Postgres 18 images keep their data in a versioned folder under
+      # /var/lib/postgresql, so the volume mounts the parent.
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:

@@ -1,0 +1,63 @@
+// Looping keyframes for the dashboard cards. Keyframes used by a single feature
+// elsewhere live in that feature's partial.
+
+// The streak card's flame.
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  25% {
+    transform: scale(1.06, 0.96) rotate(-2deg);
+  }
+
+  50% {
+    transform: scale(0.97, 1.05) rotate(1.5deg);
+  }
+
+  75% {
+    transform: scale(1.03, 0.98) rotate(-1deg);
+  }
+}
+
+// Today's dot in the streak week.
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+// The sheen moving along the level bar.
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+// Platinum trophy medals.
+@keyframes iridescent {
+  0%,
+  100% {
+    background-position:
+      0 0,
+      0% 50%;
+  }
+
+  50% {
+    background-position:
+      0 0,
+      100% 50%;
+  }
+}

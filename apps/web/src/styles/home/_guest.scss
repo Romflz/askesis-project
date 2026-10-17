@@ -1,0 +1,92 @@
+@use '../mixins' as *;
+
+// Visitors (signed out): the login popup, the note under the sample streak and
+// the sign-up nudge toast's link.
+
+.login-prompt {
+  position: fixed;
+  inset: 0;
+  // Same layer as the celebrations: above the top bar, toasts and the route loader.
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in oklab, var(--bg) 45%, rgb(0 0 0 / 0.5));
+  backdrop-filter: blur(4px);
+
+  &__card {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    width: min(24rem, 100%);
+    padding: 1.75rem 1.5rem 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow-pop);
+    text-align: center;
+  }
+
+  &__close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--accent) 35%, var(--surface));
+    color: var(--ink);
+  }
+
+  &__title {
+    margin-top: 0.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  &__text {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+
+  &__actions {
+    display: grid;
+    width: 100%;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+
+    .btn {
+      justify-content: center;
+    }
+  }
+}
+
+// The sign-up nudge toast links to registration.
+.toast__detail a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+// Visitors: a small note under the sample streak.
+.streak__guest {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+
+  a {
+    color: var(--ink-2);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}

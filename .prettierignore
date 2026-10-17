@@ -1,0 +1,15 @@
+# Dependencies and build output
+node_modules
+.output
+.nitro
+.tanstack
+dist
+coverage
+
+# Generated files
+pnpm-lock.yaml
+apps/web/src/routeTree.gen.ts
+packages/db/migrations
+
+# The license text stays exactly as published.
+LICENSE.md

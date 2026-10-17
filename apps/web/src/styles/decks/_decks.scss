@@ -1,0 +1,2725 @@
+@use '../mixins' as *;
+
+// Decks manager (/decks): library tree and tags, the card browser, dialogs, the
+// card editor, popovers and pickers, import and export.
+
+.deckmgr {
+  // Not positioned on purpose: the glow below then spans the full window width
+  // (the initial containing block) instead of stopping at this column's edges.
+  // isolation keeps its z-index: -1 in front of the page background.
+  isolation: isolate;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem 6rem;
+
+  @include up(sm) {
+    padding: 2.5rem 1.5rem 6rem;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    height: 30rem;
+    pointer-events: none;
+    background:
+      radial-gradient(40rem 18rem at 15% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
+      radial-gradient(32rem 16rem at 88% 8%, color-mix(in oklab, var(--xp) 8%, transparent), transparent 70%);
+  }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    font-weight: 650;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
+  }
+
+  &__lead {
+    margin-top: 0.45rem;
+    color: var(--muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__layout {
+    display: grid;
+    gap: 1.25rem;
+    align-items: start;
+
+    @include up(lg) {
+      grid-template-columns: 21.5rem minmax(0, 1fr);
+    }
+
+    @include up(xl) {
+      grid-template-columns: 23rem minmax(0, 1fr);
+    }
+  }
+
+  &__main {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+}
+
+// ── Side column (library tree + tags) ───────────────────────────────────────
+
+.deckmgr-side {
+  min-width: 0;
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-weight: 600;
+    text-align: left;
+
+    > span {
+      display: grid;
+      min-width: 0;
+    }
+
+    svg {
+      flex-shrink: 0;
+      transition: rotate 200ms ease;
+    }
+
+    @include up(lg) {
+      display: none;
+    }
+  }
+
+  &__toggle-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  &.is-open &__toggle svg {
+    rotate: 180deg;
+  }
+
+  &__body {
+    display: none;
+    // A fixed track: without it the column grows to the widest row (a long deck
+    // path or tag) and the whole sidebar scrolls sideways.
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-top: 0.75rem;
+
+    @include up(lg) {
+      display: grid;
+      margin-top: 0;
+      position: sticky;
+      top: 5rem;
+      max-height: calc(100dvh - 6rem);
+      overflow-y: auto;
+    }
+  }
+
+  &.is-open &__body {
+    display: grid;
+  }
+
+  &__panel {
+    min-width: 0;
+    padding: 0.6rem;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.25rem;
+    padding: 0.15rem 0.35rem 0.35rem 0.6rem;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__empty {
+    padding: 0.25rem 0.6rem 0.6rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+// ── Library tree ────────────────────────────────────────────────────────────
+
+.deckmgr-tree {
+  min-width: 0;
+
+  &__collapse {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+
+    > li {
+      min-width: 0;
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.3rem 0.35rem calc(0.25rem + var(--depth, 0) * 0.9rem);
+    border-radius: 0.75rem;
+    transition: background-color 120ms ease;
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    &.is-selected {
+      background: color-mix(in oklab, var(--accent) 13%, var(--surface));
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-ink) 30%, transparent);
+    }
+
+    // Study and ⋯ keep their space (names never shift) and appear on hover/focus.
+    &:hover .deckmgr-tree__actions,
+    &:focus-within .deckmgr-tree__actions,
+    &.is-selected .deckmgr-tree__actions,
+    &:has(.is-open) .deckmgr-tree__actions {
+      opacity: 1;
+    }
+  }
+
+  &__toggle,
+  &__toggle-spacer {
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    border-radius: 0.35rem;
+    color: var(--muted);
+  }
+
+  &__toggle {
+    transition: rotate 150ms ease;
+
+    &:hover {
+      background: var(--surface-3);
+      color: var(--ink);
+    }
+
+    &.is-open {
+      rotate: 90deg;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.1rem 0;
+    text-align: left;
+    border-radius: 0.45rem;
+  }
+
+  &__all-icon {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.6rem;
+    background: var(--surface-3);
+    color: var(--ink-2);
+  }
+
+  &__label {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.5rem;
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &__cards {
+    white-space: nowrap;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 120ms ease;
+
+    .icon-btn {
+      width: 1.9rem;
+      height: 1.9rem;
+    }
+
+    @media (hover: none) {
+      opacity: 1;
+    }
+  }
+}
+
+// Due counts as small badges: dot + number (+ label where there is room).
+.due-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+
+  &.is-clear {
+    color: var(--muted);
+  }
+
+  &--compact.is-clear {
+    font-size: inherit;
+  }
+}
+
+.due-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.05rem 0.4rem 0.05rem 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--dot) 13%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  .dot {
+    width: 0.4rem;
+    height: 0.4rem;
+  }
+
+  &__label {
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  &--new {
+    --dot: var(--c-new);
+  }
+
+  &--learning {
+    --dot: var(--c-learn);
+  }
+
+  &--review {
+    --dot: var(--c-mature);
+  }
+}
+
+// ── Tags ────────────────────────────────────────────────────────────────────
+
+.deckmgr-tags {
+  min-width: 0;
+
+  .deckmgr-side__title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+
+  &__filter {
+    position: relative;
+    display: block;
+    margin: 0 0.25rem 0.5rem;
+
+    svg {
+      position: absolute;
+      top: 50%;
+      left: 0.65rem;
+      translate: 0 -50%;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .input {
+      width: 100%;
+      height: 2.2rem;
+      padding-left: 1.9rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  &__note {
+    padding: 0 0.6rem 0.4rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1px;
+    max-height: 24rem;
+    overflow-y: auto;
+  }
+
+  &__more {
+    display: block;
+    margin: 0.4rem 0.6rem 0.2rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.deckmgr-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  padding-left: calc(var(--depth, 0) * 0.85rem);
+  border-radius: 0.6rem;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &.is-active {
+    background: color-mix(in oklab, var(--xp) 12%, var(--surface));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--xp) 30%, transparent);
+  }
+
+  &__toggle,
+  &__toggle-spacer {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: 0.2rem;
+    border-radius: 0.35rem;
+    color: var(--muted);
+  }
+
+  &__toggle {
+    transition: rotate 150ms ease;
+
+    &:hover {
+      background: var(--surface-3);
+      color: var(--ink);
+    }
+
+    &.is-open {
+      rotate: 90deg;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.4rem 0.4rem 0.2rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-align: left;
+
+    > svg {
+      flex-shrink: 0;
+      color: var(--xp);
+    }
+  }
+
+  &__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__parent {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  &__sub {
+    flex-shrink: 0;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--surface-3);
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  &__count {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  // Actions only take space while visible, so long names keep the room.
+  &__actions {
+    display: none;
+    flex-shrink: 0;
+
+    .icon-btn {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+
+    .is-danger {
+      color: var(--c-again);
+    }
+  }
+
+  &:hover &__actions,
+  &:focus-within &__actions {
+    display: flex;
+  }
+
+  @media (hover: none) {
+    &__actions {
+      display: flex;
+    }
+  }
+
+  &__edit {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem;
+
+    .input {
+      flex: 1;
+      min-width: 0;
+      height: 2rem;
+      font-size: 0.8125rem;
+    }
+  }
+}
+
+// ── Card browser ────────────────────────────────────────────────────────────
+
+.deckmgr-browser {
+  min-width: 0;
+  padding: 1.1rem;
+
+  @include up(sm) {
+    padding: 1.4rem;
+  }
+}
+
+.deckmgr-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  &__sort {
+    width: auto;
+    min-width: 10rem;
+    height: 2.4rem;
+    font-size: 0.875rem;
+  }
+
+  &__view {
+    display: flex;
+    gap: 0.15rem;
+    margin-left: auto;
+  }
+}
+
+.deckmgr-search {
+  flex: 1 1 16rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.4rem;
+  padding: 0 0.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--muted);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:focus-within {
+    border-color: var(--accent-ink);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+    }
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  button {
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+}
+
+.deckmgr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.85rem 0 1rem;
+
+  &__states {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    button {
+      white-space: nowrap;
+    }
+  }
+
+  &__clear {
+    font-size: 0.8125rem;
+  }
+}
+
+.deckmgr-table-wrap {
+  margin: 0 -0.5rem;
+  overflow-x: auto;
+}
+
+.deckmgr-table {
+  width: 100%;
+  min-width: 42rem;
+  // Fixed layout: front and back share what's left and truncate, so the table
+  // fits its panel instead of growing with the longest card.
+  table-layout: fixed;
+  font-size: 0.875rem;
+
+  td {
+    overflow: hidden;
+  }
+
+  // Front gets a fixed share; Back takes what the other columns leave.
+  .deckmgr-col--front {
+    width: 32%;
+  }
+
+  .deckmgr-col--deck {
+    width: 7.5rem;
+  }
+
+  .deckmgr-col--tags {
+    width: 8rem;
+  }
+
+  .deckmgr-col--due {
+    width: 6rem;
+  }
+
+  .deckmgr-col--interval,
+  .deckmgr-col--ease,
+  .deckmgr-col--reps,
+  .deckmgr-col--lapses {
+    width: 4.5rem;
+  }
+
+  th,
+  td {
+    padding: 0.7rem 0.5rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead th {
+    @include eyebrow;
+
+    position: sticky;
+    top: 0;
+    padding-top: 0.25rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    white-space: nowrap;
+  }
+
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background-color 100ms ease;
+
+    > * {
+      border-top: 1px solid var(--line);
+    }
+
+    &:first-child > * {
+      border-top: 0;
+    }
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    &.is-selected {
+      background: color-mix(in oklab, var(--accent) 9%, var(--surface));
+    }
+
+    &.is-suspended td:not(.deckmgr-table__check) {
+      opacity: 0.55;
+    }
+  }
+
+  &.is-compact {
+    font-size: 0.8125rem;
+
+    th,
+    td {
+      padding-top: 0.38rem;
+      padding-bottom: 0.38rem;
+    }
+
+    .deckmgr-table__hint {
+      display: none;
+    }
+  }
+
+  &__check {
+    width: 2.25rem;
+
+    input {
+      width: 1rem;
+      height: 1rem;
+      accent-color: var(--accent-ink);
+      cursor: pointer;
+    }
+  }
+
+  &__front {
+    min-width: 0;
+  }
+
+  &__open {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 550;
+    text-align: left;
+  }
+
+  &__hint {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__back {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-2);
+  }
+
+  &__deck {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+  }
+
+  &__tags {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__more {
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &__due {
+    white-space: nowrap;
+  }
+
+  .is-warn {
+    color: var(--c-again);
+    font-weight: 600;
+  }
+}
+
+.deckmgr-tagchip {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--xp) 12%, transparent);
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--ink);
+  }
+
+  &.is-leech {
+    background: color-mix(in oklab, var(--c-again) 16%, transparent);
+  }
+}
+
+.deckmgr-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+
+  &--0 {
+    color: var(--c-new);
+    font-weight: 550;
+  }
+
+  &--1,
+  &--3 {
+    --dot: var(--c-learn);
+  }
+
+  &--2 {
+    --dot: var(--c-mature);
+  }
+
+  &--suspended {
+    color: var(--muted);
+    font-style: italic;
+  }
+}
+
+.deckmgr-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+  color: var(--muted);
+
+  &__size {
+    width: auto;
+    height: 2.1rem;
+    font-size: 0.8125rem;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+
+    .icon-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+}
+
+.deckmgr-bulk {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  margin-top: 1rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in oklab, var(--accent-ink) 35%, var(--line-strong));
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-pop);
+
+  &__count {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.875rem;
+    font-weight: 650;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__danger {
+    color: var(--c-again) !important;
+  }
+}
+
+// ── Empty states ────────────────────────────────────────────────────────────
+
+.deckmgr-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+
+  > svg {
+    color: var(--accent-ink);
+  }
+
+  &--inline {
+    padding: 2.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1px dashed var(--line-strong);
+    background: var(--surface-2);
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  &__text {
+    max-width: 32rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}
+
+// ── Dialogs ─────────────────────────────────────────────────────────────────
+
+.dlg {
+  width: min(100% - 2rem, 34rem);
+  max-height: min(100dvh - 2rem, 54rem);
+  // Auto margins center the modal; the drawer and phone layouts below replace them.
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+
+  &::backdrop {
+    background: color-mix(in oklab, #000 45%, transparent);
+    backdrop-filter: blur(4px);
+  }
+
+  &[open] {
+    animation: dlg-in 180ms var(--ease-out);
+  }
+
+  &--sm {
+    width: min(100% - 2rem, 26rem);
+  }
+
+  &--lg {
+    width: min(100% - 2rem, 48rem);
+  }
+
+  &--xl {
+    width: min(100% - 2rem, 64rem);
+  }
+
+  // The drawer pins to the right edge on wide screens.
+  &--drawer {
+    @include up(md) {
+      margin: 0 0 0 auto;
+      height: 100dvh;
+      max-height: 100dvh;
+      width: min(100%, 60rem);
+      border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+
+      &[open] {
+        animation: dlg-drawer 220ms var(--ease-out);
+      }
+
+      .dlg__inner {
+        height: 100%;
+      }
+    }
+  }
+
+  @include down(sm) {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+
+    .dlg__inner {
+      height: 100%;
+    }
+  }
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  &__title {
+    font-size: 1.15rem;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+  }
+
+  &__description {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    padding: 1.25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.9rem 1.25rem;
+    border-top: 1px solid var(--line);
+    background: var(--surface-2);
+  }
+}
+
+@keyframes dlg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes dlg-drawer {
+  from {
+    opacity: 0.4;
+    transform: translateX(3rem);
+  }
+}
+
+.deckmgr-form {
+  display: grid;
+  gap: 1.1rem;
+
+  // Two fields side by side, even where .field-grid would go to three columns.
+  &__pair {
+    @include up(sm) {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+}
+
+.deckmgr-form-error {
+  margin-right: auto;
+  font-size: 0.8125rem;
+  color: var(--c-again);
+}
+
+.deckmgr-textarea {
+  height: auto;
+  min-height: 4.5rem;
+  padding: 0.65rem 0.8rem;
+  line-height: 1.5;
+  resize: vertical;
+  font-variant-numeric: normal;
+
+  &.is-mono {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+}
+
+.deckmgr-icons {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+
+  &__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.45rem;
+  }
+
+  &__option {
+    display: grid;
+    place-items: center;
+    padding: 0.3rem;
+    border-radius: 0.8rem;
+    border: 1px solid transparent;
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease;
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    &.is-selected {
+      border-color: var(--accent-ink);
+      background: color-mix(in oklab, var(--accent) 12%, var(--surface));
+    }
+  }
+}
+
+.deckmgr-confirm {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+// ── Card editor ─────────────────────────────────────────────────────────────
+
+.deckmgr-sched {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deckmgr-editor {
+  display: grid;
+  gap: 1.5rem;
+
+  &.has-preview {
+    @include up(lg) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    }
+  }
+
+  &__form {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+    align-content: start;
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
+  &__deck {
+    flex: 1;
+  }
+
+  &__toggles {
+    display: flex;
+    gap: 0.15rem;
+    padding-bottom: 0.2rem;
+
+    .is-on {
+      color: var(--accent-ink);
+      background: color-mix(in oklab, var(--accent) 14%, transparent);
+    }
+  }
+
+  &__help {
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--muted);
+
+    code {
+      padding: 0.05em 0.35em;
+      border-radius: 0.3rem;
+      background: var(--surface-3);
+      font-family: var(--font-mono);
+      font-size: 0.95em;
+      color: var(--ink-2);
+    }
+  }
+
+  &__preview {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    min-width: 0;
+
+    @include up(lg) {
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  &__danger {
+    display: flex;
+    gap: 0.35rem;
+    margin-right: auto;
+  }
+}
+
+.deckmgr-preview-card {
+  display: grid;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-strong);
+  background: radial-gradient(120% 80% at 50% 0%, var(--surface), var(--surface-2));
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+
+  &__face,
+  &__answer {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    padding: 1.4rem 1.1rem;
+    text-align: center;
+  }
+
+  &__face {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  &__answer {
+    border-top: 1px dashed var(--line-strong);
+    color: var(--accent-ink);
+    font-weight: 550;
+  }
+
+  &__hint {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  &__extra {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  &__deck {
+    padding: 0.55rem 0.85rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &__tags {
+    padding: 0 0.85rem 0.7rem;
+  }
+
+  &--small &__face {
+    padding: 0.9rem 0.85rem 0.7rem;
+    font-size: 1rem;
+  }
+
+  &--small &__answer {
+    padding: 0.7rem 0.85rem 0.9rem;
+    font-size: 0.875rem;
+  }
+
+  .card-text {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+// ── Tag chip input ──────────────────────────────────────────────────────────
+
+.taginput {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2.6rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+
+  &:focus-within {
+    border-color: var(--accent-ink);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.15rem 0.3rem 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--xp) 14%, transparent);
+    font-size: 0.75rem;
+    font-weight: 550;
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 999px;
+      color: var(--muted);
+
+      &:hover {
+        background: var(--surface-3);
+        color: var(--ink);
+      }
+    }
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 6rem;
+    height: 1.8rem;
+    border: 0;
+    background: none;
+    font-size: 0.875rem;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+// ── Import ──────────────────────────────────────────────────────────────────
+
+.deckmgr-import-start {
+  display: grid;
+  gap: 1rem;
+}
+
+.deckmgr-drop {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 2.5rem 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--line-strong);
+  background: var(--surface-2);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+
+  > svg {
+    color: var(--accent-ink);
+    margin-bottom: 0.25rem;
+  }
+
+  &:hover,
+  &:focus-within,
+  &.is-dragging {
+    border-color: var(--accent-ink);
+    background: color-mix(in oklab, var(--accent) 8%, var(--surface-2));
+  }
+
+  &__title {
+    font-weight: 650;
+  }
+
+  &__text {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+.deckmgr-import-help {
+  display: grid;
+  gap: 0.6rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+
+  code {
+    padding: 0.05em 0.35em;
+    border-radius: 0.3rem;
+    background: var(--surface-3);
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    color: var(--ink-2);
+  }
+
+  .link-button {
+    justify-self: start;
+  }
+}
+
+// Start screen: copy the prompt that has an AI assistant write a deck in this format.
+.deckmgr-import-ai {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.5rem 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 0.8125rem;
+  color: var(--muted);
+
+  > svg {
+    margin-top: 0.1rem;
+    color: var(--xp);
+  }
+
+  &__title {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  a {
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .btn {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  @include up(sm) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+
+    .btn {
+      grid-column: auto;
+    }
+  }
+}
+
+.deckmgr-import {
+  display: grid;
+  gap: 1.4rem;
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+
+    .link-button {
+      margin-left: 0.25rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  &__section {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+    min-width: 0;
+  }
+
+  &__options {
+    display: grid;
+    gap: 1.25rem;
+
+    @include up(md) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__hint {
+    margin-top: -0.25rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__targets {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  &__badge {
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &.is-new {
+      background: color-mix(in oklab, var(--c-new) 16%, transparent);
+    }
+
+    &.is-merge {
+      background: color-mix(in oklab, var(--accent) 22%, transparent);
+    }
+  }
+
+  &__n {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__preview {
+    display: grid;
+    gap: 0.75rem;
+
+    @include up(md) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}
+
+// The import mapping: the file's first rows as a sheet, one card per row, with
+// each column's role picked in its header. Wide files scroll sideways while the
+// card labels stay put.
+.deckmgr-sheet {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  thead th {
+    min-width: 10rem;
+    background: var(--surface-2);
+    font-weight: 400;
+
+    .input {
+      width: 100%;
+      height: 2.2rem;
+      font-size: 0.8125rem;
+      background-color: var(--surface);
+    }
+  }
+
+  // The "Card N" labels and the corner above them stay in view while scrolling.
+  tbody th,
+  &__corner {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border-right: 1px solid var(--line);
+  }
+
+  // The corner cell only spans the row labels.
+  thead th:first-child {
+    min-width: 0;
+  }
+
+  tbody th {
+    background: var(--surface);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  td {
+    max-width: 16rem;
+    overflow: hidden;
+    color: var(--ink);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // The card's two sides stand out; ignored columns fade.
+  [data-role='front'],
+  [data-role='back'] {
+    background: color-mix(in oklab, var(--accent) 8%, var(--surface));
+  }
+
+  thead [data-role='front'],
+  thead [data-role='back'] {
+    background: color-mix(in oklab, var(--accent) 14%, var(--surface-2));
+  }
+
+  td[data-role='ignore'] {
+    color: var(--muted);
+    opacity: 0.55;
+  }
+
+  // Rows without a front aren't imported.
+  tr.is-skipped > * {
+    opacity: 0.5;
+  }
+
+  &__name {
+    display: block;
+    max-width: 14rem;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    font-size: 0.6875rem;
+    color: var(--muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__empty {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  &:focus-visible {
+    outline-offset: 2px;
+  }
+}
+
+.deckmgr-radios {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.deckmgr-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  cursor: pointer;
+
+  input {
+    margin-top: 0.2rem;
+    accent-color: var(--accent-ink);
+  }
+
+  span {
+    display: grid;
+    gap: 0.1rem;
+    font-size: 0.8125rem;
+
+    span {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+  }
+
+  &.is-checked {
+    border-color: color-mix(in oklab, var(--accent-ink) 45%, transparent);
+    background: color-mix(in oklab, var(--accent) 8%, var(--surface));
+  }
+}
+
+.deckmgr-import-result {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+
+  > svg {
+    color: var(--c-mature);
+  }
+
+  &__title {
+    font-size: 1.2rem;
+    font-weight: 650;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 2rem;
+    margin: 0.5rem 0;
+
+    dt {
+      @include eyebrow;
+    }
+
+    dd {
+      font-size: 1.5rem;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+  }
+
+  &__decks {
+    max-width: 40rem;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+  }
+}
+
+// ── Export ──────────────────────────────────────────────────────────────────
+
+.deckmgr-export {
+  display: grid;
+  gap: 1rem;
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+  }
+
+  &__list {
+    display: grid;
+    max-height: 18rem;
+    overflow-y: auto;
+    padding: 0.35rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+
+    li {
+      padding-left: calc(var(--depth, 0) * 1.1rem);
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.45rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface);
+    }
+
+    input {
+      accent-color: var(--accent-ink);
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__n {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  .switch-row {
+    margin-bottom: 0;
+  }
+}
+
+// ── Toasts ──────────────────────────────────────────────────────────────────
+
+.deckmgr-toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 70;
+  display: grid;
+  gap: 0.4rem;
+  translate: -50% 0;
+  width: min(26rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.deckmgr-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-size: 0.875rem;
+  pointer-events: auto;
+  animation: dlg-in 180ms var(--ease-out);
+
+  > svg {
+    flex-shrink: 0;
+    color: var(--c-mature);
+  }
+
+  &--error > svg {
+    color: var(--c-again);
+  }
+
+  span {
+    flex: 1;
+  }
+
+  button {
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+  }
+}
+
+// ── Deck header (what you're looking at + next actions) ─────────────────────
+
+.deckhead {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem;
+
+  @include up(sm) {
+    padding: 1.25rem 1.5rem;
+  }
+
+  &__crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    button {
+      padding: 0.1rem 0.3rem;
+      border-radius: 0.35rem;
+      color: var(--ink-2);
+
+      &:hover {
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+    }
+
+    [aria-current='page'] {
+      padding: 0.1rem 0.3rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+  }
+
+  // The "All decks" header has no breadcrumb row.
+  &:not(:has(.deckhead__crumbs)) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+  }
+
+  &__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    min-width: 0;
+    flex: 1 1 20rem;
+
+    .deck-glyph {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.85rem;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .deck-glyph__text {
+      font-size: 1.25rem;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    border-radius: 0.85rem;
+    background: var(--surface-3);
+    color: var(--ink-2);
+  }
+
+  &__text {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  &__description {
+    max-width: 60ch;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.85rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__preset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+
+    &:hover {
+      border-color: var(--line-strong);
+      color: var(--ink);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__more {
+    padding: 0 0.6rem;
+  }
+}
+
+// ── Toolbar extras ──────────────────────────────────────────────────────────
+
+.deckmgr-chipbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.4rem;
+  padding: 0 0.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+
+  &:hover,
+  &.is-open {
+    color: var(--ink);
+    border-color: color-mix(in oklab, var(--ink) 25%, transparent);
+  }
+
+  &.is-set {
+    color: var(--ink);
+    background: color-mix(in oklab, var(--xp) 12%, var(--surface));
+    border-color: color-mix(in oklab, var(--xp) 35%, transparent);
+  }
+}
+
+// ── Popovers and menus (portaled; see components/decks/Popover.tsx) ─────────
+
+.pop {
+  z-index: 80;
+  min-width: 13rem;
+  max-width: min(22rem, calc(100vw - 1rem));
+  overflow-y: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-pop);
+  outline: none;
+  animation: pop-in 120ms var(--ease-out);
+
+  &--menu {
+    padding: 0.3rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-align: left;
+    color: var(--ink);
+    outline: none;
+
+    > svg {
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+
+    &.is-active,
+    &:focus-visible {
+      background: var(--surface-2);
+    }
+
+    &.is-danger {
+      color: var(--c-again);
+
+      > svg {
+        color: currentColor;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  &__item-label {
+    flex: 1;
+  }
+
+  &__item-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__sep {
+    height: 1px;
+    margin: 0.3rem 0.35rem;
+    background: var(--line);
+  }
+
+  &__label,
+  &__heading {
+    padding: 0.35rem 0.6rem 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  &__section {
+    padding: 0.4rem;
+  }
+
+  &__check {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.45rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-2);
+    }
+
+    input {
+      width: 1rem;
+      height: 1rem;
+      accent-color: var(--accent-ink);
+    }
+  }
+
+  &__note {
+    max-width: 16rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__confirm {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 18rem;
+    padding: 0.75rem;
+
+    p {
+      font-size: 0.875rem;
+    }
+  }
+
+  &__confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+}
+
+// Uses the individual translate/scale properties, never `transform`: floating-ui
+// positions popovers with an inline transform, and animating it would make the
+// popover fly in from the corner of the screen.
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    translate: 0 -3px;
+    scale: 0.98;
+  }
+}
+
+.picker {
+  display: grid;
+  gap: 0.35rem;
+  width: min(19rem, calc(100vw - 2rem));
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 2.3rem;
+    padding: 0 0.6rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    color: var(--muted);
+
+    &:focus-within {
+      border-color: var(--accent-ink);
+      background: var(--surface);
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      border: 0;
+      background: none;
+      color: var(--ink);
+      font-size: 0.875rem;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  &__list {
+    display: grid;
+    gap: 1px;
+    max-height: 16rem;
+    overflow-y: auto;
+
+    &--floating {
+      padding: 0.3rem;
+      max-height: 14rem;
+    }
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.55rem 0.45rem calc(0.55rem + var(--depth, 0) * 0.85rem);
+    border-radius: 0.45rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &.is-active {
+      background: var(--surface-2);
+    }
+
+    &.is-create {
+      color: var(--accent-ink);
+      font-weight: 600;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    flex-shrink: 0;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__check {
+    flex-shrink: 0;
+    color: var(--accent-ink);
+  }
+
+  &__empty {
+    padding: 0.6rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+// Popovers opened inside a dialog render here, in the dialog's top layer.
+.dlg__portal {
+  position: static;
+}
+
+// ── First run ───────────────────────────────────────────────────────────────
+
+.deckmgr-start {
+  display: grid;
+  gap: 0.6rem;
+  padding: 2rem 1.25rem;
+
+  @include up(md) {
+    padding: 3rem 2.5rem;
+  }
+
+  &__title {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 650;
+    letter-spacing: -0.035em;
+  }
+
+  &__text {
+    max-width: 52ch;
+    color: var(--ink-2);
+  }
+
+  &__options {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+
+    @include up(md) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  &__option {
+    display: grid;
+    gap: 0.35rem;
+    align-content: start;
+    padding: 1.1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    text-align: left;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease;
+
+    > svg {
+      margin-bottom: 0.35rem;
+      color: var(--accent-ink);
+    }
+
+    strong {
+      font-size: 0.95rem;
+    }
+
+    span {
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    &:hover {
+      border-color: var(--accent-ink);
+      background: color-mix(in oklab, var(--accent) 7%, var(--surface-2));
+    }
+  }
+}
+
+// ── Export formats ──────────────────────────────────────────────────────────
+
+.deckmgr-formats {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+
+  &__grid {
+    display: grid;
+    gap: 0.4rem;
+
+    @include up(sm) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  &__help {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__option {
+    padding-left: 0;
+  }
+}
+
+.deckmgr-format {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  > svg {
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 2px;
+  }
+
+  &.is-checked {
+    border-color: var(--accent-ink);
+    background: color-mix(in oklab, var(--accent) 10%, var(--surface));
+
+    > svg {
+      color: var(--accent-ink);
+    }
+  }
+
+  &__ext {
+    font-weight: 400;
+    color: var(--muted);
+  }
+}
+
+// ── Package helper (inside the import dialog) ───────────────────────────────
+
+.package-help {
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+
+  &.is-alert {
+    border-color: color-mix(in oklab, var(--c-hard) 55%, transparent);
+    background: color-mix(in oklab, var(--c-hard) 7%, var(--surface-2));
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: left;
+
+    > svg:first-child {
+      flex-shrink: 0;
+      color: var(--accent-ink);
+    }
+
+    span {
+      flex: 1;
+    }
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: rotate 150ms ease;
+  }
+
+  &.is-open &__chevron {
+    rotate: 180deg;
+  }
+
+  &__body {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0 0.9rem 0.9rem;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+  }
+
+  &__steps {
+    display: grid;
+    gap: 0.35rem;
+    padding-left: 1.25rem;
+    list-style: decimal;
+
+    li::marker {
+      color: var(--muted);
+      font-weight: 600;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    .link-button {
+      margin-left: 0.25rem;
+    }
+  }
+
+  &__prompt {
+    max-height: 16rem;
+    overflow: auto;
+    margin: 0;
+    padding: 0.75rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    color: var(--ink);
+  }
+}
+
+.deckmgr-import__progress {
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in oklab, var(--accent-ink) 30%, transparent);
+  background: color-mix(in oklab, var(--accent) 8%, var(--surface));
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+
+// ── Phones ──────────────────────────────────────────────────────────────────
+
+// The app's bottom tab bar covers the bottom of the screen below md.
+@include down(md) {
+  body:has(.tabbar) .deckmgr-bulk {
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  body:has(.tabbar) .deckmgr-toasts {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  }
+}
+
+// Table rows become stacked cards: front, back, then a line of details.
+@include down(sm) {
+  .deckmgr-table-wrap {
+    margin: 0;
+    overflow: visible;
+  }
+
+  .deckmgr-table {
+    display: block;
+    min-width: 0;
+    table-layout: auto;
+
+    tbody {
+      display: block;
+    }
+
+    .deckmgr-table__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      min-width: 0;
+      max-width: 100%;
+      white-space: normal;
+    }
+
+    .deckmgr-table__deck {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.2rem 0.6rem;
+      padding: 0.75rem 0.25rem 0.75rem 2.4rem;
+      border-top: 1px solid var(--line);
+
+      > * {
+        border-top: 0 !important;
+      }
+
+      &:first-child {
+        border-top: 0;
+      }
+    }
+
+    td {
+      display: block;
+      // !important: also beats the compact view's padding.
+      padding: 0 !important;
+      overflow: visible;
+    }
+
+    .deckmgr-table__check {
+      position: absolute;
+      top: 0.8rem;
+      left: 0.35rem;
+      width: auto;
+    }
+
+    .deckmgr-table__front,
+    .deckmgr-table__back {
+      flex: 1 0 100%;
+      min-width: 0;
+    }
+
+    .deckmgr-table__open {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .deckmgr-table__back {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      font-size: 0.8125rem;
+    }
+
+    .deckmgr-table__deck,
+    .deckmgr-table__due,
+    .num {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .num:not(:empty)::before {
+      content: attr(data-label) ' ';
+    }
+  }
+}
+
+// ── Export: what to include ─────────────────────────────────────────────────
+
+.deckmgr-include {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+
+  &__item {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.6rem;
+    padding: 0.75rem 0.8rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-strong);
+    cursor: pointer;
+
+    input {
+      width: 1.05rem;
+      height: 1.05rem;
+      margin-top: 0.1rem;
+      accent-color: var(--accent-ink);
+      cursor: inherit;
+    }
+
+    > svg {
+      margin-top: 0.05rem;
+      color: var(--muted);
+    }
+
+    &.is-checked {
+      border-color: var(--accent-ink);
+      background: color-mix(in oklab, var(--accent) 10%, var(--surface));
+
+      > svg {
+        color: var(--accent-ink);
+      }
+    }
+
+    &.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+  }
+
+  &__title {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__help {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}

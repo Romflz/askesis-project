@@ -1,0 +1,115 @@
+@use '../mixins' as *;
+
+// Activity heatmap: summary tiles, the year grid (dates show on hover), and the legend.
+
+.heatmap {
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    @include up(md) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    > div {
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    dt {
+      @include eyebrow;
+    }
+
+    dd {
+      margin-top: 0.2rem;
+      font-size: 1.35rem;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+  }
+
+  &__wrap {
+    position: relative;
+  }
+
+  &__scroll {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  &__frame {
+    --gap: 3px;
+
+    // Narrow screens scroll the year sideways instead of shrinking the cells.
+    min-width: calc(var(--weeks) * 0.8rem);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-rows: repeat(7, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: var(--gap);
+    border-radius: 0.375rem;
+
+    &:focus-visible {
+      outline-offset: 4px;
+    }
+  }
+
+  &__tip {
+    translate: calc(-50% + var(--shift, 0px)) calc(-100% - 8px);
+    white-space: nowrap;
+  }
+
+  &__legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    margin-top: 0.85rem;
+    font-size: 0.6875rem;
+    color: var(--muted);
+
+    .heat-cell {
+      width: 0.75rem;
+    }
+
+    span:first-child {
+      margin-right: 0.25rem;
+    }
+
+    span:last-child {
+      margin-left: 0.25rem;
+    }
+  }
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--heat-0);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+
+  @for $i from 1 through 4 {
+    &--#{$i} {
+      background: var(--heat-#{$i});
+    }
+  }
+
+  &.is-active {
+    transform: scale(1.35);
+    box-shadow:
+      0 0 0 2px var(--surface),
+      0 0 0 3px var(--ink);
+    // Lifted so the cells after it don't paint over the enlarged one.
+    position: relative;
+    z-index: 1;
+  }
+}

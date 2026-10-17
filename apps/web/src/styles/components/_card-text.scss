@@ -1,0 +1,203 @@
+@use 'katex/dist/katex.min';
+@use '../mixins' as *;
+
+// Rich card content: LaTeX (KaTeX) and highlighted code. See CardText.tsx for syntax.
+
+.card-text {
+  min-width: 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  strong {
+    font-weight: 700;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  // KaTeX lays itself out; inherited pre-wrap would add stray spaces.
+  .katex {
+    white-space: normal;
+    color: inherit;
+    font-size: 1.08em;
+
+    // The base reset's max-width: 100% collapses SVG accents (\vec, \overrightarrow,
+    // \widehat), which sit absolutely inside a zero-width box.
+    svg {
+      max-width: none;
+    }
+  }
+
+  .katex-error {
+    color: var(--muted) !important;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+
+  &__imath {
+    white-space: nowrap;
+  }
+
+  &__math {
+    margin: 0.6em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: normal;
+
+    .katex-display {
+      margin: 0;
+      padding: 0.15em 0;
+    }
+  }
+
+  &__icode {
+    padding: 0.08em 0.38em;
+    border-radius: 0.35rem;
+    border: 1px solid var(--line);
+    background: var(--surface-3);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    white-space: pre-wrap;
+  }
+
+  &__code {
+    position: relative;
+    max-width: 100%;
+    margin: 0.75em 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    text-align: left;
+    white-space: normal;
+
+    pre {
+      margin: 0;
+      padding: 0.9rem 1rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      // Fixed size: code stays readable however large the card face's text is.
+      font-size: 0.8125rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      line-height: 1.6;
+      tab-size: 2;
+      white-space: pre;
+    }
+
+    code {
+      font-family: inherit;
+    }
+  }
+
+  &__lang {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.5rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 0.35rem;
+    background: var(--surface-3);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    pointer-events: none;
+  }
+}
+
+// Inside a flashcard, block content takes the card's full width.
+.flashcard {
+  min-width: 0;
+
+  .card-text:has(.card-text__code, .card-text__math) {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  // The flashcard's own inline-code style must not reach into code blocks.
+  .card-text__code code {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: inherit;
+  }
+}
+
+// ── highlight.js theme from the design tokens (works in both themes) ────────
+
+.hljs {
+  color: var(--ink);
+  background: transparent;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-doctag,
+.hljs-section,
+.hljs-name {
+  color: var(--xp);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: light-dark(#2f7d00, #b7e86a);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link {
+  color: var(--flame);
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--c-new);
+}
+
+.hljs-type,
+.hljs-built_in,
+.hljs-class .hljs-title {
+  color: var(--c-young);
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-params,
+.hljs-property {
+  color: var(--ink-2);
+}
+
+.hljs-meta,
+.hljs-meta .hljs-keyword {
+  color: light-dark(#b45309, #fbbf24);
+}
+
+.hljs-deletion {
+  color: var(--c-again);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}

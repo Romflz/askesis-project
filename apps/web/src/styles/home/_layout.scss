@@ -1,0 +1,156 @@
+@use 'sass:map';
+@use '../mixins' as *;
+
+// Page frame and card grid shared by the dashboard and the public home page.
+
+.home {
+  // Not positioned on purpose: the glow below then spans the full window width
+  // (the initial containing block) instead of stopping at this column's edges.
+  // isolation keeps its z-index: -1 in front of the page background.
+  isolation: isolate;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 5rem;
+
+  @include up(sm) {
+    padding: 2rem 1.5rem 6rem;
+  }
+
+  // Ambient light behind the first row.
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    height: 36rem;
+    pointer-events: none;
+    background:
+      radial-gradient(36rem 18rem at 20% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
+      radial-gradient(30rem 18rem at 85% 10%, color-mix(in oklab, var(--xp) 9%, transparent), transparent 70%);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+
+    @include up(md) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include up(lg) {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    > * {
+      min-width: 0;
+    }
+
+    // Cards in a row share its height, so neighbors line up top and bottom.
+    > * > .panel {
+      height: 100%;
+    }
+  }
+
+  &__side {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+
+    @include up(md) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include up(lg) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.8125rem;
+    color: var(--muted);
+
+    a {
+      color: var(--ink-2);
+      text-decoration: underline;
+      text-decoration-color: var(--line-strong);
+      text-underline-offset: 3px;
+
+      &:hover {
+        color: var(--ink);
+      }
+    }
+  }
+}
+
+// Grid placement: column spans out of 12 at lg and out of 2 at md; one column below.
+// At lg each row is a wide card with a narrow one beside it: today | streak and level,
+// decks | chest and quests, insights | best hour; then the full-width rows.
+$areas: (
+  hero: (
+    md: 2,
+    lg: 8,
+  ),
+  side: (
+    md: 2,
+    lg: 4,
+  ),
+  decks: (
+    md: 2,
+    lg: 8,
+  ),
+  quests: (
+    md: 2,
+    lg: 4,
+  ),
+  insights: (
+    md: 2,
+    lg: 8,
+  ),
+  hours: (
+    md: 2,
+    lg: 4,
+  ),
+  heatmap: (
+    md: 2,
+    lg: 12,
+  ),
+  stats: (
+    md: 2,
+    lg: 12,
+  ),
+  trophies: (
+    md: 2,
+    lg: 12,
+  ),
+);
+
+@each $name, $spans in $areas {
+  .area-#{$name} {
+    @include up(md) {
+      grid-column: span map.get($spans, md);
+    }
+
+    @include up(lg) {
+      grid-column: span map.get($spans, lg);
+    }
+  }
+}
+
+// Collection and answer buttons share a full-width row on wide screens.
+.area-stats {
+  @include up(lg) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

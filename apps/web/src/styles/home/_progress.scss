@@ -1,0 +1,303 @@
+@use '../mixins' as *;
+
+// Dashboard side cards: streak, level and daily quests. Quest rewards and the
+// claim button are in _chest.scss.
+
+// ── Streak ──────────────────────────────────────────────────────────────────
+
+.streak {
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: auto -20% -60% auto;
+    width: 70%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, tint('--flame', 16%), transparent);
+    pointer-events: none;
+  }
+
+  &__freezes {
+    display: inline-flex;
+    gap: 0.2rem;
+    color: var(--line-strong);
+
+    .is-on {
+      color: var(--frost);
+    }
+  }
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__flame {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    color: var(--flame);
+    background: tint('--flame', 14%);
+    box-shadow: inset 0 0 0 1px tint('--flame', 25%);
+
+    svg {
+      fill: tint('--flame', 40%);
+      transform-origin: 50% 90%;
+      animation: flicker 2.4s ease-in-out infinite;
+    }
+
+    &.is-at-risk {
+      color: var(--muted);
+      background: var(--surface-2);
+      box-shadow: inset 0 0 0 1px var(--line);
+
+      svg {
+        fill: none;
+        animation: none;
+      }
+    }
+  }
+
+  &__count {
+    font-size: 2rem;
+    font-weight: 650;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+
+    span:last-child {
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--ink-2);
+    }
+  }
+
+  &__note {
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.4rem;
+    margin-top: 1.4rem;
+  }
+}
+
+.streak-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+
+  &__label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  &__mark {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--line-strong);
+    color: var(--muted);
+  }
+
+  &--done &__mark {
+    border-color: transparent;
+    background: var(--flame);
+    color: #fff;
+    box-shadow: 0 4px 14px -4px tint('--flame', 60%);
+  }
+
+  &--freeze &__mark {
+    border-color: transparent;
+    background: tint('--frost', 18%);
+    color: var(--frost);
+  }
+
+  &--today &__mark {
+    position: relative;
+    border-style: dashed;
+    border-color: var(--flame);
+
+    &::after {
+      content: '';
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 999px;
+      background: var(--flame);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  &--upcoming &__mark {
+    border-style: dotted;
+    opacity: 0.6;
+  }
+
+  &--none &__mark {
+    border-color: var(--line);
+  }
+}
+
+// ── Level ───────────────────────────────────────────────────────────────────
+
+.level {
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__badge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.875rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 6px 16px tint('--xp', 45%));
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__number {
+    position: relative;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: #fff;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+  }
+
+  &__next {
+    margin-top: 0.15rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  &__bar {
+    position: relative;
+    height: 0.625rem;
+    margin-top: 1.4rem;
+    border-radius: 999px;
+    background: var(--surface-3);
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--xp), color-mix(in oklab, var(--xp) 60%, #fff) 50%, var(--xp));
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+    transition: width 900ms var(--ease-out);
+  }
+
+  &__bar-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}
+
+// ── Quests ──────────────────────────────────────────────────────────────────
+
+.quests {
+  &__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  &__list {
+    display: grid;
+    gap: 1rem;
+  }
+}
+
+.quest {
+  display: flex;
+  gap: 0.85rem;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    border-radius: 0.7rem;
+    color: var(--xp);
+    background: tint('--xp', 12%);
+  }
+
+  &.is-done &__icon {
+    color: #fff;
+    background: var(--c-mature);
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 550;
+  }
+
+  &.is-done &__title {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--line-strong);
+  }
+
+  &__xp {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  &__progress {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}

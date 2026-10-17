@@ -1,0 +1,36 @@
+{
+  "name": "askesis",
+  "version": "1.0.0",
+  "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "type": "module",
+  "packageManager": "pnpm@12.11.2",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @askesis/api --filter @askesis/web dev",
+    "build": "pnpm --filter @askesis/web build",
+    "start": "pnpm --parallel --filter @askesis/api --filter @askesis/web start",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "node tools/lint/node_modules/eslint/bin/eslint.js --config tools/lint/eslint.config.js .",
+    "lint:fix": "node tools/lint/node_modules/eslint/bin/eslint.js --config tools/lint/eslint.config.js . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:push": "pnpm --filter @askesis/db push",
+    "db:generate": "pnpm --filter @askesis/db generate",
+    "db:migrate": "pnpm --filter @askesis/db migrate",
+    "db:seed": "pnpm --filter @askesis/db seed"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.22.0",
+      "onFail": "download"
+    }
+  }
+}

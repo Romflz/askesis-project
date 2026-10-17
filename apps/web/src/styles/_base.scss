@@ -1,0 +1,156 @@
+@use 'mixins' as *;
+
+// Minimal modern reset, element defaults and a few global utilities.
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+// Thin scrollbars in the theme's colors, on the page and every scrolling panel.
+// Firefox and Chromium read scrollbar-color (inherited, so set once) and
+// scrollbar-width; Safari reads the ::-webkit-scrollbar rules. Panels that hide
+// their scrollbar on purpose set scrollbar-width: none themselves.
+:root {
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar) padding-box;
+
+  &:hover {
+    background-color: var(--scrollbar-hover);
+  }
+}
+
+// Native modal dialogs center themselves with auto margins.
+dialog {
+  margin: auto;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-size-adjust: 100%;
+  // Anchor jumps land below the sticky top bar instead of under it.
+  scroll-padding-top: 5rem;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-size: inherit;
+  font-weight: inherit;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+// JetBrains Mono's coding ligatures would draw `=>` as an arrow and `!=` as ≠;
+// code on cards and in the docs shows the exact characters you type.
+code,
+kbd,
+pre,
+samp {
+  font-variant-ligatures: none;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 60%, transparent);
+  color: var(--on-accent);
+}
+
+:focus-visible {
+  @include focus-ring;
+}
+
+// Reduced motion: animations and transitions finish at once. A near-zero
+// duration rather than none, so animationend and transitionend still fire.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only {
+  @include visually-hidden;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

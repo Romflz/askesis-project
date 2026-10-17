@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792061435160,
+      "tag": "0000_ambiguous_rachel_grey",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792137608774,
+      "tag": "0001_engram_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792137612564,
+      "tag": "0002_reminder_hour_default",
+      "breakpoints": true
+    }
+  ]
+}
