@@ -1763,9 +1763,10 @@
   }
 
   &__stats {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    gap: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem 2rem;
     margin: 0.5rem 0;
 
     dt {

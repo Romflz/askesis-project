@@ -210,8 +210,11 @@ If your platform has a release or post-deploy command instead, run `pnpm db:migr
 
 - **CSV/TSV** with optional header lines (`#separator`, `#html`, `#columns`, `#deck column`, `#tags column`); a
   plain-text (`.txt`) export uses the same lines.
-- Decks are matched by full path, case-insensitively, and **merged**: importing never wipes a deck. A card with the
-  same front in the same deck is updated (default), skipped, or imported as a duplicate.
+- Decks are matched by full path, case-insensitively, and **merged**: importing never wipes a deck.
+- Every card has a permanent ID, exported in an `id` column. On import, a row with one of your card IDs updates that
+  card even if its front or deck changed; rows without one match a card with the same front in the same deck. Matches
+  are updated (default, so an import is an upsert; identical cards aren't touched), skipped, or imported as
+  duplicates.
 - Exports include **study progress** and **review history** by default. Progress columns are `state, due, interval,
 ease, stability, difficulty, step, reps, lapses, last_review, suspended`; `history` holds every past answer. On
   import, new cards stay new, existing cards only take newer progress, and history merges without duplicates, so a

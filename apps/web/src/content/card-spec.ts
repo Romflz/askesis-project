@@ -59,6 +59,9 @@ that render correctly. Follow it literally.
 7. Math: \( … \) inline, \[ … \] display. Code: fenced blocks with a language.
 8. Backslashes are literal in CSV. Write \frac, not \\frac.
 9. Never emit HTML. Use the light markup in section 6.
+10. Editing cards the user already has? Start from their Askesis export and
+    keep its id column: every row's id stays exactly as it is, new rows get an
+    empty id, and you never invent one (section 5).
 
 ## 2. File structure
 
@@ -97,6 +100,7 @@ is the front and column 2 is the back.
 | hint | hint, reading | no | ${LIMITS.hint} | Small line under the front (e.g. a reading). |
 | extra | extra, notes, note | no | ${LIMITS.extra} | Shown under the answer: context, mnemonics, sources. |
 | tags | tags, tag | no | ${LIMITS.tags} tags × ${LIMITS.tagLength} chars | Separated by spaces. "parent${DECK_PATH_SEPARATOR}child" nests a tag under another. |
+| id | id | no | a UUID | The card's ID, from an Askesis export (section 5). Empty for a new card. |
 
 Column names are case-insensitive. Unknown columns are ignored.
 Optional progress and history columns (for backups) are listed in section 7. Exports from other apps are covered in sections 8–9.
@@ -114,20 +118,48 @@ deleting a parent tag also renames or removes the tags below it.
 - Importing into an existing deck **merges**: cards are added; nothing is ever deleted.
 - Studying a parent deck includes all its subdecks.
 
-## 5. Duplicates and updates
+## 5. Card IDs, duplicates and updates
 
-A duplicate is a card in the **same deck** whose front matches after trimming
-and collapsing whitespace (case-sensitive). The importer offers three modes:
+Every Askesis card has an ID: a UUID such as
+3f2b8c1e-7a4d-4e9b-9c2a-5d6e7f8a9b0c, assigned when the card is created and
+never changed. Exports put it in an id column, right after tags.
 
-| Mode | What happens to a duplicate |
+A row matches an existing card of the user's:
+
+1. **By ID**: the row's id is one of the user's cards. That card is the match,
+   even if the file changes its front or puts it in another deck (it moves
+   there). IDs compare case-insensitively.
+2. **Otherwise by front**: a card in the **same deck** whose front matches after
+   trimming and collapsing whitespace (case-sensitive). This covers files
+   without ids, and ids that aren't the user's cards (a file someone else
+   exported, or a card that was deleted).
+
+A row with no match is a new card and gets a new ID; the id in the file is
+never reused for it. An id that isn't a UUID is ignored. The importer offers
+three modes for rows that match:
+
+| Mode | What happens to a match |
 |---|---|
-| update (default) | back is replaced; hint and extra are replaced only if the file has those columns; tags are merged; review history is kept; progress and history from the file follow section 7 |
+| update (default) | front and back are replaced; hint and extra are replaced only if the file has those columns; tags are merged; review history is kept; progress and history from the file follow section 7 |
 | skip | left alone (the file's progress and history are ignored too) |
-| duplicate | imported as an additional card |
+| duplicate | imported as an additional card with a new ID |
 
-Rows inside one file that share a deck and front are treated the same way
-(the later row updates the earlier one in update mode). To update a deck
-safely, re-export it, edit, and re-import with mode "update".
+So in update mode an import is an upsert: rows with a known id update their
+card, and the rest are added. A match that already equals its card (same text,
+no new tags, no newer progress) isn't written and is reported as unchanged, so
+re-importing an export only touches what you edited. Rows inside one file that share a deck and front
+are treated the same way (the later row updates the earlier one in update
+mode). Importing never deletes anything: a card whose row you remove from the
+file stays as it is.
+
+To change cards the user already has, edit their export:
+
+- Keep the header lines and the id column, and leave every id exactly as it is.
+- Edit fronts, backs, hints, extras and decks freely. Tags in the file are
+  added to the card's own; taking a tag out of the file doesn't remove it.
+- Add new cards as new rows with an empty id. Never invent or copy an id: a
+  copied id would overwrite the card it belongs to.
+- Import the file with mode "update".
 
 ## 6. Card text syntax
 
@@ -178,10 +210,10 @@ Fenced block, with an optional language after the opening fence:
 
 ## 7. Progress and history columns (optional: for backups and migrations)
 
-Append these columns, in this order, after tags: ${[...SCHEDULING_COLUMNS, 'history'].join(', ')}.
-The #columns line then reads:
+Append these columns, in this order, after tags and id: ${[...SCHEDULING_COLUMNS, 'history'].join(', ')}.
+The #columns line of a full export then reads:
 
-    #columns:deck,front,back,hint,extra,tags,${PROGRESS_COLUMNS}
+    #columns:deck,front,back,hint,extra,tags,id,${PROGRESS_COLUMNS}
 
 Leave all of them empty (or leave the columns out) for a new, unstudied card.
 When you generate new cards, don't add them at all.
@@ -234,7 +266,7 @@ file. In a semicolon-separated file it must be quoted.
 
 - Cards that don't exist yet are added with the file's progress. Cards that
   are new in the file (state 0, or no progress) stay new.
-- For an existing card (same deck and front, update mode), the file's
+- For an existing card (same id, or same deck and front; update mode), the file's
   progress is applied only when its last_review is newer than the card's own,
   so restoring an old backup never rolls back newer study.
 - History is merged into the review log without duplicates: an answer for
@@ -293,6 +325,7 @@ math: [$]…[/$] becomes \( … \), and [$$]…[/$$] and [latex]…[/latex] beco
 - Prefer several small cards over one list card ("Name all 7 …").
 - Use subdecks for topics (Medical${DECK_PATH_SEPARATOR}Cells) and tags for cross-cutting labels (exam-1, hard).
 - Don't create duplicates of the same front inside one deck.
+- Leave the id empty for every card you create.
 
 ## 12. Examples
 
@@ -322,6 +355,22 @@ math: [$]…[/$] becomes \( … \), and [$$]…[/$$] and [latex]…[/latex] beco
     print([n * n for n in range(4)])
     ${'```'}","${'`'}[0, 1, 4, 9]${'`'}",,,comprehensions
     Physics,"Who said ""Imagination is more important than knowledge""?",Albert Einstein,,,quotes
+
+### Editing an export (card IDs)
+
+The user exported Spanish::Verbs and asked for a fixed typo, a better back and
+one more card. Row 1 changes its front, row 2 its back and tags; both keep
+their id, so the import updates those two cards. Row 3 is new, so its id is
+empty.
+
+    #separator:comma
+    #html:false
+    #columns:deck,front,back,hint,extra,tags,id
+    #deck column:1
+    #tags column:6
+    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e
+    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs b1,1c2d3e4f-5a6b-4c7d-9e8f-a0b1c2d3e4f5
+    Spanish::Verbs,soler,to usually do something,,Suelo levantarme temprano.,verbs,
 
 ### Tab-separated, no header lines (front, back)
 

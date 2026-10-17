@@ -247,9 +247,10 @@ async function insertHistory(tx: Tx, userId: string, items: { cardId: string; de
 }
 
 /**
- * Imports rows in one transaction. Existing decks are merged into, and a card
- * whose front matches one already in its deck is updated, skipped or added
- * again, per `input.duplicates`.
+ * Imports rows in one transaction. Existing decks are merged into. A row with
+ * the ID of one of the user's cards, or else with the front of a card already in
+ * its deck, matches that card, which is updated, skipped or added again, per
+ * `input.duplicates`.
  */
 export async function importRows(userId: string, input: ImportInput): Promise<ImportResult> {
   const rowDeckPath = (row: ImportRow) =>
@@ -273,22 +274,44 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
     }
 
     const deckIds = [...new Set(deckIdByPath.values())]
+    const fields = {
+      id: card.id,
+      deckId: card.deckId,
+      front: card.front,
+      back: card.back,
+      hint: card.hint,
+      extra: card.extra,
+      suspended: card.suspended,
+      tags: card.tags,
+      position: card.position,
+      lastReview: card.lastReview,
+    }
     const existing = await tx
-      .select({
-        id: card.id,
-        deckId: card.deckId,
-        front: card.front,
-        tags: card.tags,
-        position: card.position,
-        lastReview: card.lastReview,
-      })
+      .select(fields)
       .from(card)
       .where(and(eq(card.userId, userId), inArray(card.deckId, deckIds)))
     const byKey = new Map(existing.map((c) => [cardKey(c.deckId, c.front), c]))
+    // Cards the file names by ID can be in any deck. An ID that isn't one of this
+    // user's cards (a file someone shared, a deleted card) matches nothing.
+    const byId = new Map(existing.map((c) => [c.id, c]))
+    const elsewhere = [...new Set(input.rows.flatMap((r) => (r.id && !byId.has(r.id) ? [r.id] : [])))]
+    for (let i = 0; i < elsewhere.length; i += 5_000) {
+      const found = await tx
+        .select(fields)
+        .from(card)
+        .where(and(eq(card.userId, userId), inArray(card.id, elsewhere.slice(i, i + 5_000))))
+      for (const c of found) byId.set(c.id, c)
+    }
     const nextPosition = new Map<string, number>()
     for (const c of existing) nextPosition.set(c.deckId, Math.max(nextPosition.get(c.deckId) ?? 0, c.position + 1))
+    const takePosition = (deckId: string) => {
+      const position = nextPosition.get(deckId) ?? 0
+      nextPosition.set(deckId, position + 1)
+      return position
+    }
 
     let updated = 0
+    let unchanged = 0
     let skipped = 0
     let withProgress = 0
     const inserts: (typeof card.$inferInsert)[] = []
@@ -307,7 +330,7 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
       }
 
       if (input.duplicates !== 'duplicate') {
-        const found = byKey.get(key)
+        const found = (row.id ? byId.get(row.id) : undefined) ?? byKey.get(key)
         if (found) {
           if (input.duplicates === 'skip') skipped += 1
           else {
@@ -317,18 +340,36 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
             const tags = [...new Set([...found.tags, ...row.tags])]
             const s = row.scheduling
             const newer = s?.lastReview && (!found.lastReview || new Date(s.lastReview) > found.lastReview)
+            // A card matched by ID follows the file into another deck, at its end.
+            const moved = found.deckId !== deckId
+            if (row.history?.length) histories.push({ cardId: found.id, deckId, history: row.history })
+            // Rows that match their card exactly aren't written, so re-importing an export only touches what changed.
+            const same =
+              !moved &&
+              tags.length === found.tags.length &&
+              (Object.keys(content) as (keyof typeof content)[]).every((k) => content[k] === found[k]) &&
+              (row.suspended === undefined || row.suspended === found.suspended) &&
+              !(s && newer)
+            if (same) {
+              unchanged += 1
+              continue
+            }
+            const position = moved ? takePosition(deckId) : found.position
             await tx
               .update(card)
               .set({
                 ...content,
                 tags,
+                ...(moved && { deckId, position }),
                 ...(row.suspended !== undefined && { suspended: row.suspended }),
                 ...(s && newer && progressColumns(s)),
               })
               .where(eq(card.id, found.id))
-            found.tags = tags
+            Object.assign(found, content, { tags, deckId, position })
+            if (row.suspended !== undefined) found.suspended = row.suspended
+            // Its front may have changed; later rows with the new front match it too.
+            byKey.set(key, found)
             if (s && newer) withProgress += 1
-            if (row.history?.length) histories.push({ cardId: found.id, deckId: found.deckId, history: row.history })
             updated += 1
           }
           continue
@@ -344,8 +385,7 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
         }
       }
 
-      const position = nextPosition.get(deckId) ?? 0
-      nextPosition.set(deckId, position + 1)
+      const position = takePosition(deckId)
       const s = row.scheduling
       const values: typeof card.$inferInsert = {
         id: randomUUID(),
@@ -371,6 +411,7 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
       decksMerged: [...merged].filter((p) => !index.created.some((c) => c.toLowerCase() === p.toLowerCase())),
       added: inserts.length,
       updated,
+      unchanged,
       skipped,
       withProgress,
       reviewsImported,

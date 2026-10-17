@@ -11,9 +11,15 @@
 //
 // Without headers, the separator is detected and columns default to front, back.
 //
+// Exports also carry each card's ID in an `id` column. On import, a row with the
+// ID of one of the user's cards updates that card even if its front changed;
+// rows without one are matched by deck and front.
+//
 // Optional progress columns carry each card's scheduling (state, due, interval,
 // ease, stability, difficulty, step, reps, lapses, last_review, suspended) and its
 // review history, so an export imports back exactly where the learner left off.
+
+import { CARD_ID } from '@askesis/contracts'
 
 export type Separator = ',' | '\t' | ';' | '|'
 
@@ -43,7 +49,7 @@ export const SCHEDULING_COLUMNS = [
 ] as const
 export type SchedulingColumn = (typeof SCHEDULING_COLUMNS)[number] | 'history'
 
-export type ColumnRole = 'front' | 'back' | 'deck' | 'tags' | 'hint' | 'extra' | 'ignore' | SchedulingColumn
+export type ColumnRole = 'front' | 'back' | 'deck' | 'tags' | 'hint' | 'extra' | 'id' | 'ignore' | SchedulingColumn
 
 /** The content roles and their labels in the import dialog. */
 export const COLUMN_ROLES: { role: ColumnRole; label: string }[] = [
@@ -53,6 +59,7 @@ export const COLUMN_ROLES: { role: ColumnRole; label: string }[] = [
   { role: 'tags', label: 'Tags' },
   { role: 'hint', label: 'Hint' },
   { role: 'extra', label: 'Extra' },
+  { role: 'id', label: 'Card ID' },
   { role: 'ignore', label: 'Ignore' },
 ]
 
@@ -199,6 +206,7 @@ const ALIASES: Record<string, ColumnRole> = {
   extra: 'extra',
   notes: 'extra',
   note: 'extra',
+  id: 'id',
   last_review: 'last_review',
   ...Object.fromEntries(SCHEDULING_COLUMNS.map((c) => [c, c])),
   history: 'history',
@@ -273,6 +281,8 @@ export interface ImportReview {
 }
 
 export interface ImportRowData {
+  /** An existing card's ID (lowercase UUID), from the file's id column. */
+  id?: string
   deck: string | null
   front: string
   back: string
@@ -309,6 +319,9 @@ export function buildRows(file: ParsedFile, roles: ColumnRole[]): { rows: Import
     }
     // Mapped columns always come through (even empty) so an update can clear a
     // field; unmapped ones stay undefined and leave existing values alone.
+    // Anything but a UUID (another app's note ID, say) can't be one of ours.
+    const id = get('id').toLowerCase()
+    if (CARD_ID.test(id)) row.id = id
     if (roles.includes('hint')) row.hint = get('hint')
     if (roles.includes('extra')) row.extra = get('extra')
     const scheduling = readScheduling(get)
@@ -319,12 +332,14 @@ export function buildRows(file: ParsedFile, roles: ColumnRole[]): { rows: Import
       if (history.length) row.history = history
     }
     // Cloze notes ("{{c1::answer::hint}}") become one card per cloze number;
-    // the note's second field (Back Extra) moves to the extra line.
+    // the note's second field (Back Extra) moves to the extra line. Each is a
+    // new card, so none keeps the row's ID.
     const clozes = expandCloze(front)
     if (clozes) {
       for (const card of clozes) {
         rows.push({
           ...row,
+          id: undefined,
           front: card.front,
           back: card.back,
           extra: [row.back, row.extra].filter(Boolean).join('\n\n') || undefined,
@@ -493,6 +508,8 @@ export function htmlToText(html: string): string {
 // ── Export ────────────────────────────────────────────────────────────────────
 
 export interface ExportCard {
+  /** Saved cards have one; a template of new cards doesn't. */
+  id?: string
   deck: string
   front: string
   back: string
@@ -520,6 +537,7 @@ function quote(value: string, separator: Separator): string {
 export function exportCsv(cards: ExportCard[], separator: Separator = ',', options: ExportOptions = {}): string {
   const progress = options.progress ?? cards.some((c) => c.scheduling)
   const history = options.history ?? cards.some((c) => c.history?.length)
+  const ids = cards.some((c) => c.id)
   const columns = [
     'deck',
     'front',
@@ -527,6 +545,7 @@ export function exportCsv(cards: ExportCard[], separator: Separator = ',', optio
     'hint',
     'extra',
     'tags',
+    ...(ids ? ['id'] : []),
     ...(progress ? SCHEDULING_COLUMNS : []),
     ...(history ? ['history'] : []),
   ]
@@ -534,7 +553,7 @@ export function exportCsv(cards: ExportCard[], separator: Separator = ',', optio
   const head = [`#separator:${name}`, '#html:false', `#columns:${columns.join(separator)}`, '#deck column:1', '#tags column:6']
   const lines = cards.map((c) => {
     const s = c.scheduling
-    const cells = [c.deck, c.front, c.back, c.hint ?? '', c.extra ?? '', c.tags.join(' ')]
+    const cells = [c.deck, c.front, c.back, c.hint ?? '', c.extra ?? '', c.tags.join(' '), ...(ids ? [c.id ?? ''] : [])]
     if (progress) {
       // Every scheduling column but the last; `suspended` is filled for every card.
       cells.push(

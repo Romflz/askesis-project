@@ -425,6 +425,7 @@ export async function libraryRoutes(app: FastifyInstance) {
     const content = exportCsv(
       cards
         .map((c) => ({
+          id: c.id,
           deck: paths.get(c.deckId)!,
           front: c.front,
           back: c.back,

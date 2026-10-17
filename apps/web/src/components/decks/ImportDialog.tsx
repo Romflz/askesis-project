@@ -187,6 +187,7 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
       decksMerged: [],
       added: 0,
       updated: 0,
+      unchanged: 0,
       skipped: file.skipped,
       withProgress: 0,
       reviewsImported: 0,
@@ -197,6 +198,7 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
       const r = await importCards({ data: { rows, defaultDeck: fallbackDeck, duplicates } })
       sum.added += r.added
       sum.updated += r.updated
+      sum.unchanged = (sum.unchanged ?? 0) + (r.unchanged ?? 0)
       sum.skipped += r.skipped
       sum.withProgress = (sum.withProgress ?? 0) + (r.withProgress ?? 0)
       sum.reviewsImported = (sum.reviewsImported ?? 0) + (r.reviewsImported ?? 0)
@@ -279,6 +281,12 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
               <dt>Updated</dt>
               <dd>{fmtInt(result.updated)}</dd>
             </div>
+            {(result.unchanged ?? 0) > 0 && (
+              <div>
+                <dt>Unchanged</dt>
+                <dd>{fmtInt(result.unchanged!)}</dd>
+              </div>
+            )}
             <div>
               <dt>Skipped</dt>
               <dd>{fmtInt(result.skipped)}</dd>
@@ -338,7 +346,7 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
           <div className="deckmgr-import-help">
             <p>
               Columns can be named in a header row (<code>front</code>, <code>back</code>, <code>deck</code>, <code>tags</code>,{' '}
-              <code>hint</code>, <code>extra</code>) or with header lines like <code>#separator:tab</code> and{' '}
+              <code>hint</code>, <code>extra</code>, <code>id</code>) or with header lines like <code>#separator:tab</code> and{' '}
               <code>#deck column:1</code>. Without either, the first column is the front and the second the back.
             </p>
             <button type="button" className="link-button" onClick={() => downloadText('askesis-template.csv', templateCsv())}>
@@ -517,11 +525,13 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
             </section>
             <section className="deckmgr-import__section">
               <h3 className="eyebrow">Cards that already exist</h3>
-              <p className="deckmgr-import__hint">Matched by the same front in the same deck.</p>
+              <p className="deckmgr-import__hint">
+                Matched by card ID (the id column of an Askesis export), or else by the same front in the same deck.
+              </p>
               <div className="deckmgr-radios" role="radiogroup" aria-label="Duplicates">
                 {(
                   [
-                    ['update', 'Update them', 'Replace back, hint and extra; merge tags; keep review history.'],
+                    ['update', 'Update them', 'Replace front, back, hint and extra; merge tags; keep review history.'],
                     ['skip', 'Skip them', 'Leave existing cards exactly as they are.'],
                     ['duplicate', 'Import as new', 'Add a second copy.'],
                   ] as const
