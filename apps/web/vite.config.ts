@@ -13,10 +13,12 @@ export default defineConfig(({ mode }) => {
   return {
     envDir,
     server: { port: 3000 },
-    // Pre-bundle client deps reached through workspace packages (@askesis/core),
-    // so dev doesn't discover them late and serve stale optimized chunks.
+    // Pre-bundle client deps reached through workspace packages (@askesis/core)
+    // or loaded on demand (posthog-js, after cookie consent), so dev doesn't
+    // discover them late and serve stale optimized chunks.
     optimizeDeps: {
       include: [
+        'posthog-js',
         'ts-fsrs',
         'recharts',
         'motion/react',

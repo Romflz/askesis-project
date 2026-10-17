@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { ArrowRight, AtSign, Lock } from 'lucide-react'
 import { useState } from 'react'
+import { capture } from '../lib/analytics.ts'
 import { AuthShell } from '../components/auth/AuthShell.tsx'
 import { authErrorMessage, Field, FormError, PasswordField, SubmitButton } from '../components/auth/fields.tsx'
 import { authClient } from '../lib/auth-client.ts'
@@ -44,6 +45,7 @@ function Login() {
     // Nothing cached for a previous account may show; then re-run beforeLoad (session) everywhere and continue.
     clearUserData(queryClient)
     await router.invalidate()
+    capture('user_signed_in')
     await router.navigate({ href: next })
   }
 

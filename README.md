@@ -21,7 +21,8 @@ Version **1.0.0** · [License](#license) · Free for personal and community use 
   six daily quests; 36 trophies; an analytics page with forecasts, true retention and your toughest cards.
 - **Free practice decks.** 96 public decks (4,800 cards) from Japanese, Spanish and Arabic to Java, Haskell, AWS and engineering,
   studyable without an account.
-- **Self-hostable.** One web app, one API, one Postgres. No tracking, no ads.
+- **Self-hostable.** One web app, one API, one Postgres. No ads. askesisproject.org uses opt-in analytics; a
+  self-hosted copy sends nothing unless you give it a PostHog key.
 
 ## The board
 
@@ -156,16 +157,17 @@ and restart `pnpm dev`. Browsers allow push only over HTTPS, with `localhost` as
 
 Everything lives in one `.env` at the repository root (see `.env.example`):
 
-| Variable                                                 | Purpose                                                                    |
-| -------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `DATABASE_URL`                                           | Postgres connection string.                                                |
-| `BETTER_AUTH_SECRET`                                     | Session signing secret, 32+ characters.                                    |
-| `WEB_ORIGIN`                                             | Public origin of the web app; auth cookies are issued for it.              |
-| `API_HOST`, `API_PORT`, `API_URL`                        | Where the API listens, and where the web app's server reaches it.          |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web Push reminders. Generate keys with `pnpm --filter @askesis/api vapid`. |
-| `VITE_SITE_URL`                                          | Public origin for canonical URLs, Open Graph and the sitemap.              |
-| `VITE_GITHUB_URL`, `VITE_PATREON_URL`                    | Links in the top bar and the support section.                              |
-| `VITE_CONTACT_EMAIL`                                     | The address on the contact page.                                           |
+| Variable                                                        | Purpose                                                                      |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                  | Postgres connection string.                                                  |
+| `BETTER_AUTH_SECRET`                                            | Session signing secret, 32+ characters.                                      |
+| `WEB_ORIGIN`                                                    | Public origin of the web app; auth cookies are issued for it.                |
+| `API_HOST`, `API_PORT`, `API_URL`                               | Where the API listens, and where the web app's server reaches it.            |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`        | Web Push reminders. Generate keys with `pnpm --filter @askesis/api vapid`.   |
+| `VITE_SITE_URL`                                                 | Public origin for canonical URLs, Open Graph and the sitemap.                |
+| `VITE_GITHUB_URL`, `VITE_PATREON_URL`                           | Links in the top bar and the support section.                                |
+| `VITE_CONTACT_EMAIL`                                            | The address on the contact page.                                             |
+| `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN`, `VITE_PUBLIC_POSTHOG_HOST` | Optional PostHog analytics, loaded only after a visitor accepts all cookies. |
 
 Restart both servers after changing `.env`.
 

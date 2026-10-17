@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router'
 import { ArrowRight, Lock, Mail, User } from 'lucide-react'
 import { useState } from 'react'
+import { capture } from '../lib/analytics.ts'
 import { AuthShell } from '../components/auth/AuthShell.tsx'
 import { authErrorMessage, Field, FormError, PasswordField, SubmitButton } from '../components/auth/fields.tsx'
 import { UsernameField, type UsernameStatus, usernameReady } from '../components/auth/UsernameField.tsx'
@@ -58,6 +59,7 @@ function Register() {
     // Nothing cached for a previous account may show; then re-run beforeLoad (session) everywhere and continue.
     clearUserData(queryClient)
     await router.invalidate()
+    capture('user_registered')
     await router.navigate({ href: next })
   }
 

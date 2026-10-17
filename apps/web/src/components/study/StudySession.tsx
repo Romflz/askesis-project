@@ -14,6 +14,7 @@ import clsx from 'clsx'
 import { Clock, Coins, Flame, Info, Keyboard, Settings2, Tag, X, Zap } from 'lucide-react'
 import { AnimatePresence, motion, useAnimate, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { capture } from '../../lib/analytics.ts'
 import { fmtInt } from '../../lib/format.ts'
 import { sfx } from '../../lib/sfx.ts'
 import { useUserDataMutation } from '../../lib/queries.ts'
@@ -218,6 +219,12 @@ export function StudySession({ queue, search }: { queue: StudyQueue; search: Stu
       const at = Date.now()
       // Answer time is capped at a minute, so a break doesn't count as study time.
       const ms = Math.min(60_000, Math.max(0, at - shownAt.current))
+      capture('study_card_rated', {
+        rating,
+        card_kind: card.kind,
+        study_mode: queue.mode,
+        reschedules: queue.reschedules,
+      })
       dispatch({ type: 'answer', rating, now: at, ms })
       GRADE_SOUND[rating]()
 

@@ -3,6 +3,7 @@ import { answer, type CardContent, formatInterval, type Memory, newMemory, previ
 import clsx from 'clsx'
 import { Eye, RotateCcw } from 'lucide-react'
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { capture } from '../../lib/analytics.ts'
 import { CardText, hasBlockContent, stripMarkup } from '../askesis/CardText.tsx'
 import { Kbd } from '../askesis/ui.tsx'
 
@@ -114,6 +115,7 @@ export function PracticeDrill({ slug, cards }: { slug: string; cards: CardConten
     const next = memories.slice()
     next[current] = answer(memory, rating, new Date(), DEFAULT_PRESET)
     const count = answered + 1
+    capture('practice_card_rated', { rating, public_deck_slug: slug })
     setMemories(next)
     setAnswered(count)
     setRevealed(false)
@@ -122,6 +124,7 @@ export function PracticeDrill({ slug, cards }: { slug: string; cards: CardConten
   }
 
   function reset() {
+    capture('practice_progress_reset', { public_deck_slug: slug, answered_count: answered })
     const fresh = cards.map(() => null)
     setMemories(fresh)
     setAnswered(0)

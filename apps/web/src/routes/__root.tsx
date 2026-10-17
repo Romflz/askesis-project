@@ -16,6 +16,7 @@ import { type ReactNode, useEffect } from 'react'
 import { CookieBanner } from '../components/askesis/CookieBanner.tsx'
 import { themeScript, TopBar } from '../components/askesis/TopBar.tsx'
 import { TopLoader } from '../components/askesis/TopLoader.tsx'
+import { identify, startAnalytics } from '../lib/analytics.ts'
 import { registerPwa } from '../lib/pwa.ts'
 import { absoluteUrl, DEFAULT_IMAGE, SITE_NAME } from '../lib/seo.ts'
 import { getSessionUser } from '../server/session.functions.ts'
@@ -104,6 +105,9 @@ function RootLayout() {
   const { user } = Route.useRouteContext()
   const ownChrome = useMatches({ select: (matches) => matches.some((m) => m.staticData?.ownChrome) })
   useEffect(registerPwa, [])
+  useEffect(startAnalytics, [])
+  const userId = user?.id ?? null
+  useEffect(() => identify(userId), [userId])
   return (
     <>
       <TopLoader />

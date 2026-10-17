@@ -72,8 +72,9 @@ function Privacy() {
             <span className="info-basis">Basis: consent.</span>
           </li>
           <li>
-            <strong>Analytics:</strong> pages visited, clicks, device, browser and approximate location, only if you accept all
-            cookies. To understand how Askesis is used and improve it. <span className="info-basis">Basis: consent.</span>
+            <strong>Analytics:</strong> pages visited, clicks, errors, device, browser and approximate location, linked to your
+            account ID if you’re signed in, only if you accept all cookies. To understand how Askesis is used and improve it.{' '}
+            <span className="info-basis">Basis: consent.</span>
           </li>
           <li>
             <strong>Supporter tier:</strong> if you support us on Patreon. To give you your perks.{' '}

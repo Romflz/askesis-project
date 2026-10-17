@@ -3,6 +3,7 @@ import { DECK_PATH_SEPARATOR, formatInterval } from '@askesis/core'
 import clsx from 'clsx'
 import { Ban, CirclePlay, Code2, Eye, Trash2 } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { capture } from '../../lib/analytics.ts'
 import { useUserDataMutation } from '../../lib/queries.ts'
 import { createCard, deleteCard, updateCard } from '../../server/library.functions.ts'
 import { CardText } from '../askesis/CardText.tsx'
@@ -86,6 +87,11 @@ export function CardEditor({ state, library, onClose }: { state: EditorState; li
     setError(null)
     try {
       await saveCard.mutateAsync(draft)
+      capture(editing ? 'card_updated' : 'card_created', {
+        has_hint: Boolean(draft.hint.trim()),
+        has_extra: Boolean(draft.extra.trim()),
+        tag_count: draft.tags.length,
+      })
       toast(editing ? 'Card saved' : 'Card added')
       if (addAnother) {
         // Keep deck and tags: adding a batch of similar cards is the common case.
@@ -115,6 +121,7 @@ export function CardEditor({ state, library, onClose }: { state: EditorState; li
     if (!confirmDelete) return setConfirmDelete(true)
     try {
       await removeCard.mutateAsync({ data: { id: editing.id } })
+      capture('card_deleted')
       toast('Card deleted')
       onClose()
     } catch (e) {

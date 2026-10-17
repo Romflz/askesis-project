@@ -5,10 +5,12 @@ packages:
 
 # Dependencies allowed to run install scripts (pnpm blocks them by default).
 # esbuild's script sets up its platform-specific binary. sass's file watcher
-# ships prebuilt binaries, so its fallback build script stays off.
+# ships prebuilt binaries, so its fallback build script stays off. core-js
+# (through posthog-js) only prints a funding message.
 allowBuilds:
   esbuild: true
   '@parcel/watcher': false
+  core-js: false
 
 minimumReleaseAgeExclude:
   - argparse@3.0.3
