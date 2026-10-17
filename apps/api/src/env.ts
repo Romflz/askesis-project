@@ -20,7 +20,7 @@ const schema = z.object({
   // Reminders are off until both keys are set.
   VAPID_PUBLIC_KEY: optionalString,
   VAPID_PRIVATE_KEY: optionalString,
-  VAPID_SUBJECT: z.string().trim().default('mailto:hello@askesis.local'),
+  VAPID_SUBJECT: z.string().trim().default('mailto:romflz@proton.me'),
 })
 
 export const env = schema.parse(process.env)
