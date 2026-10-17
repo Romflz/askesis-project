@@ -56,7 +56,8 @@ function save(slug: string, memories: (Memory | null)[], answered: number) {
 /**
  * The next card: anything due now, then the next unseen card,
  * then (when nothing else is left) learning cards due within the learn-ahead limit.
- * `skip` avoids showing the card just answered unless it is the only option.
+ * `skip` is the card just answered: shown again straight away it would only test
+ * short-term memory, so it waits for its step instead.
  */
 function pick(memories: (Memory | null)[], now: number, skip: number | null): number | null {
   // Learning and relearning cards (states 1 and 3) may be shown up to the learn-ahead limit early.
@@ -74,10 +75,7 @@ function pick(memories: (Memory | null)[], now: number, skip: number | null): nu
   if (due !== null) return due
   const unseen = memories.findIndex((m, i) => m === null && i !== skip)
   if (unseen >= 0) return unseen
-  const ahead = earliest(learnAheadLimit)
-  if (ahead !== null) return ahead
-  const last = skip === null ? null : memories[skip]
-  return last && last.due.getTime() <= learnAheadLimit(last) ? skip : null
+  return earliest(learnAheadLimit)
 }
 
 /** Flashcard practice for a public deck, graded with the default preset and saved in localStorage. */
@@ -157,6 +155,18 @@ export function PracticeDrill({ slug, cards }: { slug: string; cards: CardConten
     return dues.length ? Math.min(...dues) : null
   }, [memories])
 
+  // The card just answered waits for its step (see `pick`): count down, then show it.
+  const waitUntil = current === null && nextDue !== null && nextDue - Date.now() <= LEARN_AHEAD_MS ? nextDue : null
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (waitUntil === null) return
+    const timer = setInterval(() => {
+      if (Date.now() >= waitUntil) setCurrent(pick(memories, waitUntil, null))
+      else setTick((t) => t + 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [waitUntil, memories])
+
   return (
     <div className="practice-drill">
       <div className="practice-drill__bar">
@@ -208,6 +218,18 @@ export function PracticeDrill({ slug, cards }: { slug: string; cards: CardConten
               ))}
             </div>
           )}
+        </div>
+      ) : waitUntil !== null ? (
+        <div className="practice-card practice-card--done">
+          <p className="practice-card__done-title">
+            Next card in {Math.max(1, Math.ceil((waitUntil - Date.now()) / 60_000))} min
+          </p>
+          <p className="practice-card__done-text">
+            Cards come back after a short break, so you recall them instead of rereading them.
+          </p>
+          <button type="button" className="btn btn--primary" onClick={() => setCurrent(pick(memories, waitUntil, null))}>
+            Show now
+          </button>
         </div>
       ) : (
         <div className="practice-card practice-card--done">

@@ -12,8 +12,8 @@ import {
 
 // The focused session's state machine. Card order: learning cards
 // that are due come first, then the prepared queue; when only learning cards are
-// left, ones due within the learn-ahead limit are shown early, otherwise the
-// session waits for the next one.
+// left, ones due within the learn-ahead limit are shown early (never the card
+// just answered), otherwise the session waits for the next one.
 
 /** Combo milestones: each one heats the combo flame up a step. */
 export const COMBO_MILESTONES = [10, 25, 50] as const
@@ -118,15 +118,21 @@ export function initSession(
   )
 }
 
-/** Puts the next card on screen (in the order described at the top), or waits, or finishes. */
-function pick(state: SessionState, now: number, learnAheadMs: number): SessionState {
+/**
+ * Puts the next card on screen (in the order described at the top), or waits, or finishes.
+ * `answeredId` is the card just answered.
+ */
+function pick(state: SessionState, now: number, learnAheadMs: number, answeredId?: string): SessionState {
   const learning = [...state.learning].sort((a, b) => a.due - b.due)
   const base = { ...state, revealed: false, waitingUntil: null }
   const dueNow = learning[0] && learning[0].due <= now ? learning[0] : null
   if (dueNow) return { ...base, current: dueNow.card, learning: learning.slice(1) }
   if (state.queue.length) return { ...base, current: state.queue[0]!, queue: state.queue.slice(1), learning }
+  // Showing a missed card again straight away only tests short-term memory, so
+  // it waits for its step unless another card can go first.
+  const ahead = learning.find((l) => l.due - now <= learnAheadMs && l.card.id !== answeredId)
+  if (ahead) return { ...base, current: ahead.card, learning: learning.filter((l) => l !== ahead) }
   const next = learning[0]
-  if (next && next.due - now <= learnAheadMs) return { ...base, current: next.card, learning: learning.slice(1) }
   if (next) return { ...base, current: null, learning, waitingUntil: next.due }
   return { ...base, current: null, learning, finished: true }
 }
@@ -194,6 +200,7 @@ export function sessionReducer(config: SessionConfig) {
           },
           action.now,
           config.learnAheadMs,
+          card.id,
         )
       }
 

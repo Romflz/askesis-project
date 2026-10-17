@@ -633,8 +633,8 @@ export function StudySession({ queue, search }: { queue: StudyQueue; search: Stu
               {now !== null && state.waitingUntil !== null ? clock(state.waitingUntil - now) : '…'}
             </p>
             <p className="study-wait__note">
-              {state.learning.length} {state.learning.length === 1 ? 'card is' : 'cards are'} waiting for their next learning
-              step.
+              {state.learning.length} {state.learning.length === 1 ? 'card is waiting for its' : 'cards are waiting for their'}{' '}
+              next learning step.
             </p>
             <div className="study-wait__actions">
               <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: 'showNow' })}>
