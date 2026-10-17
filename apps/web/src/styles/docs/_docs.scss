@@ -413,6 +413,12 @@
     border-top: 1px solid var(--line);
   }
 
+  // The first column names things (columns, settings, keys): keep a name whole
+  // rather than splitting it mid-word to make room for the other columns.
+  td:first-child .docs-inline-code {
+    overflow-wrap: break-word;
+  }
+
   td:first-child {
     color: var(--ink);
     font-weight: 500;
