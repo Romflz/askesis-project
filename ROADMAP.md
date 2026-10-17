@@ -26,6 +26,16 @@ A notes page next to your decks, for everything that doesn't fit on a card.
 - Spend the coins you earn from daily chests, quests and lucky finds.
 - `/shop` is a placeholder for now, and every coin earned until it opens stays in your balance.
 
+### Career roadmaps
+
+A roadmap page for each career, such as Linux administrator, frontend developer, DevOps engineer or data analyst,
+showing what to learn and in which order.
+
+- Each roadmap is a path of steps from the basics to advanced topics, with the practice decks for each step: for a
+  Linux administrator, the filesystem decks from basics to advanced, then the command line and Bash scripting.
+- Start any step in one click. Signed in, your progress shows on the path and finished steps are checked off.
+- Roadmaps are public pages, like the practice decks, so anyone can follow one without an account.
+
 ### Health stats
 
 - See how your studying is going over time: workload, backlog, lapses, session length and missed days.
