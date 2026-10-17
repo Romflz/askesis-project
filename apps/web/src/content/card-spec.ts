@@ -59,9 +59,10 @@ that render correctly. Follow it literally.
 7. Math: \( … \) inline, \[ … \] display. Code: fenced blocks with a language.
 8. Backslashes are literal in CSV. Write \frac, not \\frac.
 9. Never emit HTML. Use the light markup in section 6.
-10. Editing cards the user already has? Start from their Askesis export and
-    keep its identifier column: every row's identifier stays exactly as it is,
-    new rows get an empty one, and you never copy one (section 5).
+10. Identifiers (section 5): leave them empty for a one-off deck. Give every
+    card a stable one of your own when the deck will be regenerated and
+    imported again. Editing the user's export? Keep each row's identifier
+    exactly as it is, and leave it empty on new rows.
 
 ## 2. File structure
 
@@ -100,9 +101,11 @@ is the front and column 2 is the back.
 | hint | hint, reading | no | ${LIMITS.hint} | Small line under the front (e.g. a reading). |
 | extra | extra, notes, note | no | ${LIMITS.extra} | Shown under the answer: context, mnemonics, sources. |
 | tags | tags, tag | no | ${LIMITS.tags} tags × ${LIMITS.tagLength} chars | Separated by spaces. "parent${DECK_PATH_SEPARATOR}child" nests a tag under another. |
-| identifier | identifier, id | no | 200 | The card's identifier, from an Askesis export (section 5). Empty for a new card. |
+| identifier | identifier | no | 200 | The card's identifier (section 5). Empty, or your own stable one, for a new card. |
 
-Column names are case-insensitive. Unknown columns are ignored.
+Column names are case-insensitive. Unknown columns are ignored. An id column
+only appears in Askesis exports made before identifiers existed: a UUID there
+still finds the card it came from. Never write one.
 Optional progress and history columns (for backups) are listed in section 7. Exports from other apps are covered in sections 8–9.
 
 Tags nest: a card tagged "lang${DECK_PATH_SEPARATOR}spanish${DECK_PATH_SEPARATOR}verbs" is found when studying
@@ -136,21 +139,29 @@ Cards are matched **by identifier only**, never by their text. For each row:
 3. **No identifier**: a new card, and Askesis makes up an identifier for it.
 
 Identifiers are compared exactly (letter case counts), are at most 200
-characters, and may be any text, so a file from another tool can bring its own
-(kanji-0001). Only the first row with a given identifier uses it: a later row
-with the same one is a new card. An import never fails over an identifier. The
-importer offers three modes for rows that match:
+characters, and may be any text. Only the first row with a given identifier
+uses it: a later row with the same one is a new card. An import never fails
+over an identifier.
+
+When to give your own: leave identifiers empty for a deck that's imported
+once; Askesis makes them. For a deck you'll correct or regenerate and import
+again, give every card a stable identifier of your own, such as
+lpic1-c01-001, so the new version updates the cards in place instead of adding
+copies. Keep a card's identifier when you fix the card, and never reuse one for
+a different card: that would overwrite the card that has it.
+
+The importer offers three modes for rows that match:
 
 | Mode | What happens to a match |
 |---|---|
-| update (default) | front and back are replaced, and hint and extra too if the file has those columns. Nothing else changes: the card keeps its progress, review history, tags, deck and suspended flag |
+| update (default) | front and back are replaced, and hint and extra too if the file has those columns; the file's tags are added (none are removed). Nothing else changes: the card keeps its deck, progress, review history and suspended flag |
 | skip | left alone |
 | duplicate | imported as an additional card with a new identifier |
 
 So in update mode an import is an upsert: rows with a known identifier update
-their card's text, and the rest are added. A match whose text already equals
-the file isn't written and is reported as unchanged, so re-importing a file
-only touches what you edited. Importing never deletes anything: a card whose
+their card's text and add their tags, and the rest are added. A match the file
+doesn't change (same text, no new tags) isn't written and is reported as
+unchanged, so re-importing a file only touches what you edited. Importing never deletes anything: a card whose
 row you remove from the file stays as it is.
 
 Rows without an identifier get a new one each time, so importing the same file
@@ -161,10 +172,14 @@ To change cards the user already has, edit their export:
 
 - Keep the header lines and the identifier column, and leave every identifier
   exactly as it is.
-- Edit fronts, backs, hints and extras. A card's deck, tags, suspended flag
-  and progress don't change on import; change those in Askesis.
+- Edit fronts, backs, hints and extras, and add tags (for example to mark
+  cards for the user to review or delete). A tag taken out of the file stays
+  on the card, and a card's deck, suspended flag and progress don't change on
+  import; change those in Askesis.
 - Add new cards as new rows with an empty identifier; Askesis makes one. Never
   copy an identifier from another row: only the first row with it uses it.
+- If cards were deleted in Askesis since the export, delete their rows too: a
+  row whose card no longer exists is added back as a new card.
 - Import the file with mode "update".
 
 ## 6. Card text syntax
@@ -213,6 +228,23 @@ Fenced block, with an optional language after the opening fence:
 | **bold** | bold |
 | *italic* or _italic_ | italic |
 | a line break | kept as a line break |
+
+### Cloze deletions
+
+Write {{c1::hidden part}} in the front to make cloze cards, and leave the back
+empty. {{c1::answer::hint}} shows the hint in the gap. Each number makes its own
+card: the front shows the sentence with that part as […] (or [hint]) and the
+other parts filled in; the back shows the whole sentence with that part in
+bold. Text in the back column moves under the answer, above the extra, which
+works as on any card. A cloze row's identifier gets -c1, -c2 … added for each
+card it makes (lpic1-c01-001-c2), so a re-import finds them.
+
+    #separator:comma
+    #html:false
+    #columns:deck,front,back,hint,extra,tags,identifier
+    #deck column:1
+    #tags column:6
+    Biology::Cells,"{{c1::Ribosomes}} build proteins in the {{c2::cytoplasm}}.",,,They also sit on the rough ER.,biology,bio-cells-001
 
 ## 7. Progress and history columns (optional: for backups and migrations)
 
@@ -330,7 +362,7 @@ math: [$]…[/$] becomes \( … \), and [$$]…[/$$] and [latex]…[/latex] beco
 - Prefer several small cards over one list card ("Name all 7 …").
 - Use subdecks for topics (Medical${DECK_PATH_SEPARATOR}Cells) and tags for cross-cutting labels (exam-1, hard).
 - Don't create duplicates of the same front inside one deck.
-- Leave the identifier empty for every card you create.
+- Leave the identifier empty, unless the deck will be imported again (section 5).
 
 ## 12. Examples
 
@@ -387,7 +419,8 @@ identifier is empty.
 As Askesis exports it, with each card's identifier. Row 1 is a review card with its
 full history, row 2 is in its learning steps (step 1), row 3 is new, and row 4
 is a suspended FSRS card whose history only gives time and rating. A file
-converted from another app has the same columns with every identifier empty.
+converted from another app, like the script's output in the appendix, has no
+identifier column (or leaves it empty).
 
     #separator:comma
     #html:false

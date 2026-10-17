@@ -12,15 +12,16 @@
 // Without headers, the separator is detected and columns default to front, back.
 //
 // Exports also carry each card's identifier, unique per user, in an `identifier`
-// column (`id` is read as the same). On import, a row with the identifier of one
-// of the user's cards updates that card's text; any other row is a new card,
-// which keeps the row's identifier.
+// column. On import, a row with the identifier of one of the user's cards updates
+// that card's text; any other row is a new card, which keeps the row's identifier.
+// Files exported before identifiers existed have the card's internal id in an `id`
+// column instead; it still finds the card it came from.
 //
 // Optional progress columns carry each card's scheduling (state, due, interval,
 // ease, stability, difficulty, step, reps, lapses, last_review, suspended) and its
 // review history, so an export imports back exactly where the learner left off.
 
-import { IDENTIFIER_MAX } from '@askesis/contracts'
+import { IDENTIFIER_MAX, UUID_PATTERN } from '@askesis/contracts'
 
 export type Separator = ',' | '\t' | ';' | '|'
 
@@ -50,7 +51,7 @@ export const SCHEDULING_COLUMNS = [
 ] as const
 export type SchedulingColumn = (typeof SCHEDULING_COLUMNS)[number] | 'history'
 
-export type ColumnRole = 'front' | 'back' | 'deck' | 'tags' | 'hint' | 'extra' | 'identifier' | 'ignore' | SchedulingColumn
+export type ColumnRole = 'front' | 'back' | 'deck' | 'tags' | 'hint' | 'extra' | 'identifier' | 'id' | 'ignore' | SchedulingColumn
 
 /** The content roles and their labels in the import dialog. */
 export const COLUMN_ROLES: { role: ColumnRole; label: string }[] = [
@@ -61,6 +62,7 @@ export const COLUMN_ROLES: { role: ColumnRole; label: string }[] = [
   { role: 'hint', label: 'Hint' },
   { role: 'extra', label: 'Extra' },
   { role: 'identifier', label: 'Identifier' },
+  { role: 'id', label: 'Old Askesis ID' },
   { role: 'ignore', label: 'Ignore' },
 ]
 
@@ -208,7 +210,7 @@ const ALIASES: Record<string, ColumnRole> = {
   notes: 'extra',
   note: 'extra',
   identifier: 'identifier',
-  id: 'identifier',
+  id: 'id',
   last_review: 'last_review',
   ...Object.fromEntries(SCHEDULING_COLUMNS.map((c) => [c, c])),
   history: 'history',
@@ -285,6 +287,8 @@ export interface ImportReview {
 export interface ImportRowData {
   /** The card's identifier, from the file's identifier column. */
   identifier?: string
+  /** The card's internal id, from an export made before identifiers existed. */
+  cardId?: string
   deck: string | null
   front: string
   back: string
@@ -340,6 +344,16 @@ export function buildRows(
         seen.add(identifier)
       }
     }
+    // Only a UUID can be an old Askesis id; other tools' id columns are often row
+    // numbers, which would match the wrong cards between files.
+    const cardId = get('id').toLowerCase()
+    if (UUID_PATTERN.test(cardId)) {
+      if (seen.has(cardId)) repeatedIdentifiers += 1
+      else {
+        row.cardId = cardId
+        seen.add(cardId)
+      }
+    }
     if (roles.includes('hint')) row.hint = get('hint')
     if (roles.includes('extra')) row.extra = get('extra')
     const scheduling = readScheduling(get)
@@ -350,14 +364,19 @@ export function buildRows(
       if (history.length) row.history = history
     }
     // Cloze notes ("{{c1::answer::hint}}") become one card per cloze number;
-    // the note's second field (Back Extra) moves to the extra line. Each is a
-    // new card, so none keeps the row's ID.
+    // the note's second field (Back Extra) moves to the extra line. Each card's
+    // identifier is the row's plus its number ("lpic-001-c2"), so a re-import
+    // finds them again.
     const clozes = expandCloze(front)
     if (clozes) {
       for (const card of clozes) {
+        const own = row.identifier && `${row.identifier}-c${card.n}`
+        const fits = own && own.length <= IDENTIFIER_MAX && !seen.has(own)
+        if (fits) seen.add(own)
         rows.push({
           ...row,
-          identifier: undefined,
+          identifier: fits ? own : undefined,
+          cardId: undefined,
           front: card.front,
           back: card.back,
           extra: [row.back, row.extra].filter(Boolean).join('\n\n') || undefined,
@@ -377,10 +396,11 @@ const CLOZE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g
  * front hides that deletion ("[…]" or "[hint]") and shows the others, the back
  * reveals it in bold. Returns null when the text has no clozes.
  */
-export function expandCloze(text: string): { front: string; back: string }[] | null {
+export function expandCloze(text: string): { n: number; front: string; back: string }[] | null {
   const numbers = [...new Set([...text.matchAll(CLOZE)].map((m) => Number(m[1])))].sort((a, b) => a - b)
   if (numbers.length === 0) return null
   return numbers.map((n) => ({
+    n,
     front: text.replace(CLOZE, (_, num: string, answer: string, hint?: string) =>
       Number(num) === n ? `[${hint?.trim() || '…'}]` : answer,
     ),

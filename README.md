@@ -213,7 +213,8 @@ If your platform has a release or post-deploy command instead, run `pnpm db:migr
 - Decks are matched by full path, case-insensitively, and **merged**: importing never wipes a deck.
 - Every card has a short identifier (like `k7m2qp`), unique per account and exported in an `identifier` column; the
   database id stays internal. Imports match cards by identifier only: a row with one of your identifiers updates that
-  card's text (front, back, hint, extra) and keeps its progress, history, tags and deck; any other row is a new card
+  card's text (front, back, hint, extra) and adds the file's tags, keeping its deck, progress and history; any other
+  row is a new card
   that keeps the file's identifier, so importing a file twice never duplicates it. Matches are updated (default;
   identical cards aren't touched), skipped, or imported as duplicates.
 - Exports include **study progress** and **review history** by default. Progress columns are `state, due, interval,

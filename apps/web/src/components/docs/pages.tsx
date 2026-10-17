@@ -1221,7 +1221,8 @@ Geography,{{c1::Canberra::city}} is the capital of Australia.,,,,capitals`}
       <p>
         The first row makes four cards, each hiding one layer and showing the others; the answer appears in bold on the back. A
         hint after a second <C>::</C> shows in the gap, so the second row asks “[city] is the capital of Australia.” Typed into
-        the card editor, the braces stay as plain text. Keep cloze sentences short and hide only the key word.
+        the card editor, the braces stay as plain text. Leave the back empty: text there shows under the answer, above the extra.
+        Keep cloze sentences short and hide only the key word.
       </p>
 
       <H2 id="directions">Both directions</H2>
@@ -1498,7 +1499,7 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
           [<C>extra</C>, 'notes, note', 'Shown under the answer.'],
           [
             <C>identifier</C>,
-            'id',
+            '',
             <>
               The card’s identifier, in exports. Leave it empty for new cards (see <a href="#identifiers">Card identifiers</a>).
             </>,
@@ -1519,7 +1520,8 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
       <ul>
         <li>
           <strong>A row with your card’s identifier updates that card’s text</strong>: front, back, hint and extra. A stray space
-          or a fixed typo never creates a second card. The card keeps its progress, review history, tags and deck.
+          or a fixed typo never creates a second card. Tags in the file are added; the card keeps its deck, progress and review
+          history.
         </li>
         <li>
           <strong>A row with an empty identifier is a new card.</strong> Askesis makes one for it when you import.
@@ -1530,7 +1532,16 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         </li>
         <li>
           <strong>Deleting a row doesn’t delete the card.</strong> Importing never deletes anything; delete cards in the card
-          browser.
+          browser. The other way round, if you deleted cards since exporting, remove their rows too, or the import adds them back.
+        </li>
+        <li>
+          <strong>Cards added from a practice deck</strong> get identifiers made from the deck’s name, like{' '}
+          <C>spanish-3f9a2c1b0d</C>, so adding the deck again skips the cards you already have.
+        </li>
+        <li>
+          <strong>Your own identifiers work too</strong>, any text up to 200 characters. Give a deck you’ll regenerate or correct
+          stable ones, like <C>lpic1-c01-001</C>, and each new version updates the cards in place. Never reuse one for a different
+          card.
         </li>
       </ul>
       <p>
@@ -1543,6 +1554,10 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         Cards are matched by identifier only, never by their text. A file without identifiers (one you wrote, one an AI assistant
         made, or one from another app) adds all its cards each time you import it. After importing it, export the deck to get a
         file with identifiers for editing.
+      </p>
+      <p>
+        Exports made before identifiers existed have an <C>id</C> column instead. Importing one still finds the cards it came
+        from; export again to get identifiers.
       </p>
 
       <H2 id="importing">Importing</H2>
@@ -1576,7 +1591,7 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         rows={[
           [
             <strong>Update</strong>,
-            'Default. The front, back, hint and extra are replaced; the card keeps its progress, review history, tags and deck. Cards whose text already matches the file aren’t touched (they count as unchanged), and rows that match nothing are added, so importing an edited export updates what changed and adds what’s new.',
+            'Default. The front, back, hint and extra are replaced and new tags are added; the card keeps its deck, progress and review history. Cards the file doesn’t change aren’t touched (they count as unchanged), and rows that match nothing are added, so importing an edited export updates what changed and adds what’s new.',
           ],
           [<strong>Skip</strong>, 'Existing cards are left alone.'],
           [<strong>Import as new</strong>, 'A second copy is added, with a new identifier.'],

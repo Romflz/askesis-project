@@ -681,3 +681,15 @@ export function getPublicCategory(slug: string): PublicCategory | undefined {
 export function decksInCategory(slug: PublicCategorySlug | string): PublicDeck[] {
   return PUBLIC_DECKS.filter((d) => d.category === slug)
 }
+
+/**
+ * The identifier a practice deck's card gets when someone adds the deck to their
+ * collection: the deck's slug and a hash of the front, so adding the deck again
+ * finds the cards already added and skips them. The migration
+ * 0004_practice_card_identifiers computes the same in SQL; keep them in step.
+ */
+export async function practiceCardIdentifier(slug: string, front: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(front.trim()))
+  const hex = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
+  return `${slug}-${hex.slice(0, 10)}`
+}

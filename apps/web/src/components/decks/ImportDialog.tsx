@@ -541,7 +541,11 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
               <div className="deckmgr-radios" role="radiogroup" aria-label="Duplicates">
                 {(
                   [
-                    ['update', 'Update them', 'Replace front, back, hint and extra; keep progress, history, tags and deck.'],
+                    [
+                      'update',
+                      'Update them',
+                      'Replace front, back, hint and extra, add new tags; keep deck, progress and history.',
+                    ],
                     ['skip', 'Skip them', 'Leave existing cards exactly as they are.'],
                     ['duplicate', 'Import as new', 'Add a second copy.'],
                   ] as const
@@ -574,7 +578,7 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
                 </>
               )}
               . It comes in with the cards you don’t have yet. Cards you already have keep their own progress and history; only
-              their text is updated.
+              their text and tags change.
             </p>
           )}
         </div>

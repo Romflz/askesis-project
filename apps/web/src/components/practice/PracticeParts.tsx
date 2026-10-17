@@ -1,5 +1,5 @@
 import type { SessionUser } from '@askesis/contracts'
-import type { PublicDeck } from '@askesis/core'
+import { practiceCardIdentifier, type PublicDeck } from '@askesis/core'
 import type { DeckTileData } from '../../server/practice.functions.ts'
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Check, LoaderCircle, Plus, UserPlus } from 'lucide-react'
@@ -50,19 +50,23 @@ export function Faq({ items, title = 'Frequently asked questions' }: { items: { 
  * skipping cards they already have). Anonymous: sign up, then come back here.
  */
 export function AddToDecks({ deck, user, compact = false }: { deck: PublicDeck; user: SessionUser | null; compact?: boolean }) {
-  const addDeck = useUserDataMutation(() =>
+  const addDeck = useUserDataMutation(async () =>
     importCards({
       data: {
         defaultDeck: deck.shortTitle,
         duplicates: 'skip',
-        rows: deck.cards.map((c) => ({
-          deck: null,
-          front: c.front,
-          back: c.back,
-          hint: c.hint,
-          extra: c.extra,
-          tags: [deck.slug],
-        })),
+        // A fixed identifier per card, so adding the deck again skips the cards already added.
+        rows: await Promise.all(
+          deck.cards.map(async (c) => ({
+            identifier: await practiceCardIdentifier(deck.slug, c.front),
+            deck: null,
+            front: c.front,
+            back: c.back,
+            hint: c.hint,
+            extra: c.extra,
+            tags: [deck.slug],
+          })),
+        ),
       },
     }),
   )

@@ -275,7 +275,7 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
     const deckIds = [...new Set(deckIdByPath.values())]
     // Cards the file names by identifier, in any deck. Identifiers are unique per
     // user, so only this user's cards can match; another account's never does.
-    const fields = { id: card.id, front: card.front, back: card.back, hint: card.hint, extra: card.extra }
+    const fields = { id: card.id, front: card.front, back: card.back, hint: card.hint, extra: card.extra, tags: card.tags }
     const fileIdentifiers = [...new Set(input.rows.flatMap((r) => (r.identifier ? [r.identifier] : [])))]
     const owned = []
     for (let i = 0; i < fileIdentifiers.length; i += 5_000) {
@@ -287,6 +287,16 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
       )
     }
     const byIdentifier = new Map(owned.map((c) => [c.identifier, c]))
+    // Files exported before identifiers existed name cards by their internal id.
+    const cardIds = [...new Set(input.rows.flatMap((r) => (r.cardId ? [r.cardId] : [])))]
+    const byCardId = new Map<string, (typeof owned)[number]>()
+    for (let i = 0; i < cardIds.length; i += 5_000) {
+      const rows = await tx
+        .select({ ...fields, identifier: card.identifier })
+        .from(card)
+        .where(and(eq(card.userId, userId), inArray(card.id, cardIds.slice(i, i + 5_000))))
+      for (const c of rows) byCardId.set(c.id, c)
+    }
     // New cards go to the end of their deck.
     const nextPosition = new Map<string, number>()
     const ends = await tx
@@ -310,6 +320,8 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
       const deckId = deckIdByPath.get(rowDeckPath(row).toLowerCase())!
       const identifier = row.identifier && !used.has(row.identifier) ? row.identifier : undefined
       if (identifier) used.add(identifier)
+      const cardId = row.cardId && !used.has(row.cardId) ? row.cardId : undefined
+      if (cardId) used.add(cardId)
       // Only columns present in the file overwrite: a CSV without hint/extra keeps them.
       const content = {
         front: row.front,
@@ -318,19 +330,23 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
         ...(row.extra !== undefined && { extra: row.extra || null }),
       }
 
-      // A card the user already has only takes the file's text. Its progress,
-      // history, tags, deck and suspended flag stay as they are, and a card whose
-      // text already matches isn't written at all.
-      const found = identifier ? byIdentifier.get(identifier) : undefined
+      // A card the user already has takes the file's text and gains its tags (an
+      // import never removes anything). Its deck, progress, history and suspended
+      // flag stay as they are, and a card the file doesn't change isn't written.
+      const found = (identifier ? byIdentifier.get(identifier) : undefined) ?? (cardId ? byCardId.get(cardId) : undefined)
       if (found && input.duplicates !== 'duplicate') {
+        const tags = [...new Set([...found.tags, ...row.tags])]
+        const same =
+          tags.length === found.tags.length &&
+          (Object.keys(content) as (keyof typeof content)[]).every((k) => content[k] === found[k])
         if (input.duplicates === 'skip') skipped += 1
-        else if ((Object.keys(content) as (keyof typeof content)[]).every((k) => content[k] === found[k])) unchanged += 1
+        else if (same) unchanged += 1
         else {
           await tx
             .update(card)
-            .set(content)
+            .set({ ...content, tags })
             .where(and(eq(card.id, found.id), eq(card.userId, userId)))
-          Object.assign(found, content)
+          Object.assign(found, content, { tags })
           updated += 1
         }
         continue

@@ -404,12 +404,17 @@ export const importReview = z.object({
 /** Longest card identifier a file may carry. */
 export const IDENTIFIER_MAX = 200
 
+/** A UUID as files carry it: any version, lowercase. */
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+
 export const importRow = z.object({
   /**
    * The card's identifier (the `identifier` column of an export), unique per user:
    * the user's card with it is updated, otherwise a new card keeps it.
    */
   identifier: z.string().trim().min(1).max(IDENTIFIER_MAX).optional(),
+  /** The card's internal id, from an `id` column: only files exported before identifiers existed have one. */
+  cardId: z.string().regex(UUID_PATTERN).optional(),
   /** Deck path ("Parent::Child"); null uses the import's default deck. */
   deck: z.string().trim().max(400).nullable(),
   front: cardText.trim().min(1),
