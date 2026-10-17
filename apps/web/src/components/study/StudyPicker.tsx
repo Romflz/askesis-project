@@ -45,7 +45,8 @@ export function StudyPicker({ library }: { library: LibraryPayload }) {
 
   // Stored decks and tags that no longer exist are dropped, and an order this
   // version doesn't know falls back to the default; the rest of the config is
-  // kept. Until storage is read, everything shows as selected.
+  // kept. Until storage is read, everything counts as selected (and the
+  // selection is hidden, see .is-pending).
   const config: PickerConfig = useMemo(() => {
     const deckIds = stored.deckIds.filter((id) => byId.has(id))
     const known = (t: string) => tagPaths.has(t)
@@ -173,7 +174,7 @@ export function StudyPicker({ library }: { library: LibraryPayload }) {
   }
 
   return (
-    <div className="study-picker">
+    <div className={clsx('study-picker', !loaded && 'is-pending')}>
       <div className="study-picker__quick">
         <button type="button" className="study-quick" onClick={() => start({ ...TODAY, all: true, deckIds: [] })}>
           <span className="study-quick__icon">

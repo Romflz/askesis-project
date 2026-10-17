@@ -72,6 +72,13 @@ $kinds: (
     min-width: 0;
   }
 
+  // The saved selection is read from storage just after hydration. Until then
+  // what shows it stays hidden, so the server's default (all decks) doesn't
+  // flash checked and then clear.
+  &.is-pending :is(.study-check, .study-picker__title, .study-summary) {
+    visibility: hidden;
+  }
+
   @include up(lg) {
     grid-template-columns: minmax(0, 1fr) 25rem;
     align-items: start;
