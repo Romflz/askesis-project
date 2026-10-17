@@ -11,15 +11,16 @@
 //
 // Without headers, the separator is detected and columns default to front, back.
 //
-// Exports also carry each card's ID in an `id` column. On import, a row with the
-// ID of one of the user's cards updates that card even if its front changed;
-// rows without one are matched by deck and front.
+// Exports also carry each card's identifier, unique per user, in an `identifier`
+// column (`id` is read as the same). On import, a row with the identifier of one
+// of the user's cards updates that card's text; any other row is a new card,
+// which keeps the row's identifier.
 //
 // Optional progress columns carry each card's scheduling (state, due, interval,
 // ease, stability, difficulty, step, reps, lapses, last_review, suspended) and its
 // review history, so an export imports back exactly where the learner left off.
 
-import { CARD_ID } from '@askesis/contracts'
+import { IDENTIFIER_MAX } from '@askesis/contracts'
 
 export type Separator = ',' | '\t' | ';' | '|'
 
@@ -49,7 +50,7 @@ export const SCHEDULING_COLUMNS = [
 ] as const
 export type SchedulingColumn = (typeof SCHEDULING_COLUMNS)[number] | 'history'
 
-export type ColumnRole = 'front' | 'back' | 'deck' | 'tags' | 'hint' | 'extra' | 'id' | 'ignore' | SchedulingColumn
+export type ColumnRole = 'front' | 'back' | 'deck' | 'tags' | 'hint' | 'extra' | 'identifier' | 'ignore' | SchedulingColumn
 
 /** The content roles and their labels in the import dialog. */
 export const COLUMN_ROLES: { role: ColumnRole; label: string }[] = [
@@ -59,7 +60,7 @@ export const COLUMN_ROLES: { role: ColumnRole; label: string }[] = [
   { role: 'tags', label: 'Tags' },
   { role: 'hint', label: 'Hint' },
   { role: 'extra', label: 'Extra' },
-  { role: 'id', label: 'Card ID' },
+  { role: 'identifier', label: 'Identifier' },
   { role: 'ignore', label: 'Ignore' },
 ]
 
@@ -206,7 +207,8 @@ const ALIASES: Record<string, ColumnRole> = {
   extra: 'extra',
   notes: 'extra',
   note: 'extra',
-  id: 'id',
+  identifier: 'identifier',
+  id: 'identifier',
   last_review: 'last_review',
   ...Object.fromEntries(SCHEDULING_COLUMNS.map((c) => [c, c])),
   history: 'history',
@@ -281,8 +283,8 @@ export interface ImportReview {
 }
 
 export interface ImportRowData {
-  /** An existing card's ID (lowercase UUID), from the file's id column. */
-  id?: string
+  /** The card's identifier, from the file's identifier column. */
+  identifier?: string
   deck: string | null
   front: string
   back: string
@@ -296,11 +298,21 @@ export interface ImportRowData {
   history?: ImportReview[]
 }
 
-/** Turns parsed rows into cards using the chosen column roles; rows without a front are skipped and counted. */
-export function buildRows(file: ParsedFile, roles: ColumnRole[]): { rows: ImportRowData[]; skipped: number } {
+/**
+ * Turns parsed rows into cards using the chosen column roles; rows without a
+ * front are skipped and counted. An identifier is used by its first row only: a
+ * later row with the same one (a row copied to write a new card, say) loses it,
+ * so it can't overwrite that card, and is counted in `repeatedIdentifiers`.
+ */
+export function buildRows(
+  file: ParsedFile,
+  roles: ColumnRole[],
+): { rows: ImportRowData[]; skipped: number; repeatedIdentifiers: number } {
   const clean = (value: string) => (file.html ? htmlToText(value) : value).trim()
   const rows: ImportRowData[] = []
   let skipped = 0
+  let repeatedIdentifiers = 0
+  const seen = new Set<string>()
   for (const cells of file.rows) {
     const get = (role: ColumnRole) => {
       const i = roles.indexOf(role)
@@ -319,9 +331,15 @@ export function buildRows(file: ParsedFile, roles: ColumnRole[]): { rows: Import
     }
     // Mapped columns always come through (even empty) so an update can clear a
     // field; unmapped ones stay undefined and leave existing values alone.
-    // Anything but a UUID (another app's note ID, say) can't be one of ours.
-    const id = get('id').toLowerCase()
-    if (CARD_ID.test(id)) row.id = id
+    // One that's too long is dropped rather than failing the whole import.
+    const identifier = get('identifier')
+    if (identifier && identifier.length <= IDENTIFIER_MAX) {
+      if (seen.has(identifier)) repeatedIdentifiers += 1
+      else {
+        row.identifier = identifier
+        seen.add(identifier)
+      }
+    }
     if (roles.includes('hint')) row.hint = get('hint')
     if (roles.includes('extra')) row.extra = get('extra')
     const scheduling = readScheduling(get)
@@ -339,7 +357,7 @@ export function buildRows(file: ParsedFile, roles: ColumnRole[]): { rows: Import
       for (const card of clozes) {
         rows.push({
           ...row,
-          id: undefined,
+          identifier: undefined,
           front: card.front,
           back: card.back,
           extra: [row.back, row.extra].filter(Boolean).join('\n\n') || undefined,
@@ -349,7 +367,7 @@ export function buildRows(file: ParsedFile, roles: ColumnRole[]): { rows: Import
     }
     rows.push(row)
   }
-  return { rows, skipped }
+  return { rows, skipped, repeatedIdentifiers }
 }
 
 const CLOZE = /\{\{c(\d+)::([\s\S]*?)(?:::([\s\S]*?))?\}\}/g
@@ -470,11 +488,6 @@ export function splitDeckPath(path: string): string[] {
     .filter(Boolean)
 }
 
-/** Fronts compare after trimming and collapsing whitespace, like a duplicate check should. */
-export function frontKey(front: string): string {
-  return front.trim().replace(/\s+/g, ' ')
-}
-
 // ── HTML from other apps' exports ─────────────────────────────────────────────
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
@@ -509,7 +522,7 @@ export function htmlToText(html: string): string {
 
 export interface ExportCard {
   /** Saved cards have one; a template of new cards doesn't. */
-  id?: string
+  identifier?: string
   deck: string
   front: string
   back: string
@@ -537,7 +550,7 @@ function quote(value: string, separator: Separator): string {
 export function exportCsv(cards: ExportCard[], separator: Separator = ',', options: ExportOptions = {}): string {
   const progress = options.progress ?? cards.some((c) => c.scheduling)
   const history = options.history ?? cards.some((c) => c.history?.length)
-  const ids = cards.some((c) => c.id)
+  const identifiers = cards.some((c) => c.identifier)
   const columns = [
     'deck',
     'front',
@@ -545,7 +558,7 @@ export function exportCsv(cards: ExportCard[], separator: Separator = ',', optio
     'hint',
     'extra',
     'tags',
-    ...(ids ? ['id'] : []),
+    ...(identifiers ? ['identifier'] : []),
     ...(progress ? SCHEDULING_COLUMNS : []),
     ...(history ? ['history'] : []),
   ]
@@ -553,7 +566,8 @@ export function exportCsv(cards: ExportCard[], separator: Separator = ',', optio
   const head = [`#separator:${name}`, '#html:false', `#columns:${columns.join(separator)}`, '#deck column:1', '#tags column:6']
   const lines = cards.map((c) => {
     const s = c.scheduling
-    const cells = [c.deck, c.front, c.back, c.hint ?? '', c.extra ?? '', c.tags.join(' '), ...(ids ? [c.id ?? ''] : [])]
+    const cells = [c.deck, c.front, c.back, c.hint ?? '', c.extra ?? '', c.tags.join(' ')]
+    if (identifiers) cells.push(c.identifier ?? '')
     if (progress) {
       // Every scheduling column but the last; `suspended` is filled for every card.
       cells.push(

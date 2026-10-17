@@ -1,8 +1,9 @@
 import type { DeckNode, ImportInput, ImportResult, ImportRow, TagSummary } from '@askesis/contracts'
-import { addDays, dayKey, dayStart, type DayConfig, DECK_PATH_SEPARATOR, frontKey, splitDeckPath } from '@askesis/core'
+import { addDays, dayKey, dayStart, type DayConfig, DECK_PATH_SEPARATOR, splitDeckPath } from '@askesis/core'
 import { and, eq, gte, inArray, schema, type SQL, sql } from '@askesis/db'
 import { randomUUID } from 'node:crypto'
 import { db } from './db.ts'
+import { newIdentifiers } from './identifiers.ts'
 
 const { deck, deckPreset, card, reviewLog } = schema
 
@@ -248,14 +249,12 @@ async function insertHistory(tx: Tx, userId: string, items: { cardId: string; de
 
 /**
  * Imports rows in one transaction. Existing decks are merged into. A row with
- * the ID of one of the user's cards, or else with the front of a card already in
- * its deck, matches that card, which is updated, skipped or added again, per
- * `input.duplicates`.
+ * the ID of one of the user's cards matches that card, which is updated, skipped
+ * or added again, per `input.duplicates`; every other row is a new card.
  */
 export async function importRows(userId: string, input: ImportInput): Promise<ImportResult> {
   const rowDeckPath = (row: ImportRow) =>
     splitDeckPath(row.deck ?? input.defaultDeck).join(DECK_PATH_SEPARATOR) || input.defaultDeck
-  const cardKey = (deckId: string, front: string) => `${deckId}\u0000${frontKey(front)}`
 
   return db.transaction(async (tx) => {
     const index = { decks: await tx.select().from(deck).where(eq(deck.userId, userId)), created: [] as string[] }
@@ -274,53 +273,43 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
     }
 
     const deckIds = [...new Set(deckIdByPath.values())]
-    const fields = {
-      id: card.id,
-      deckId: card.deckId,
-      front: card.front,
-      back: card.back,
-      hint: card.hint,
-      extra: card.extra,
-      suspended: card.suspended,
-      tags: card.tags,
-      position: card.position,
-      lastReview: card.lastReview,
+    // Cards the file names by identifier, in any deck. Identifiers are unique per
+    // user, so only this user's cards can match; another account's never does.
+    const fields = { id: card.id, front: card.front, back: card.back, hint: card.hint, extra: card.extra }
+    const fileIdentifiers = [...new Set(input.rows.flatMap((r) => (r.identifier ? [r.identifier] : [])))]
+    const owned = []
+    for (let i = 0; i < fileIdentifiers.length; i += 5_000) {
+      owned.push(
+        ...(await tx
+          .select({ ...fields, identifier: card.identifier })
+          .from(card)
+          .where(and(eq(card.userId, userId), inArray(card.identifier, fileIdentifiers.slice(i, i + 5_000))))),
+      )
     }
-    const existing = await tx
-      .select(fields)
+    const byIdentifier = new Map(owned.map((c) => [c.identifier, c]))
+    // New cards go to the end of their deck.
+    const nextPosition = new Map<string, number>()
+    const ends = await tx
+      .select({ deckId: card.deckId, end: sql<number>`max(${card.position}) + 1` })
       .from(card)
       .where(and(eq(card.userId, userId), inArray(card.deckId, deckIds)))
-    const byKey = new Map(existing.map((c) => [cardKey(c.deckId, c.front), c]))
-    // Cards the file names by ID can be in any deck. An ID that isn't one of this
-    // user's cards (a file someone shared, a deleted card) matches nothing.
-    const byId = new Map(existing.map((c) => [c.id, c]))
-    const elsewhere = [...new Set(input.rows.flatMap((r) => (r.id && !byId.has(r.id) ? [r.id] : [])))]
-    for (let i = 0; i < elsewhere.length; i += 5_000) {
-      const found = await tx
-        .select(fields)
-        .from(card)
-        .where(and(eq(card.userId, userId), inArray(card.id, elsewhere.slice(i, i + 5_000))))
-      for (const c of found) byId.set(c.id, c)
-    }
-    const nextPosition = new Map<string, number>()
-    for (const c of existing) nextPosition.set(c.deckId, Math.max(nextPosition.get(c.deckId) ?? 0, c.position + 1))
-    const takePosition = (deckId: string) => {
-      const position = nextPosition.get(deckId) ?? 0
-      nextPosition.set(deckId, position + 1)
-      return position
-    }
+      .groupBy(card.deckId)
+    for (const e of ends) nextPosition.set(e.deckId, Number(e.end))
 
     let updated = 0
     let unchanged = 0
     let skipped = 0
     let withProgress = 0
     const inserts: (typeof card.$inferInsert)[] = []
-    // Cards added earlier in this same import, by key, so a repeated front merges too.
-    const pending = new Map<string, typeof card.$inferInsert>()
+    // New cards without an identifier of their own get one after the loop.
+    const needIdentifier: (typeof card.$inferInsert)[] = []
     const histories: { cardId: string; deckId: string; history: ImportHistory }[] = []
+    // Only the first row with an identifier uses it, as in buildRows; a repeat is a new card.
+    const used = new Set<string>()
     for (const row of input.rows) {
       const deckId = deckIdByPath.get(rowDeckPath(row).toLowerCase())!
-      const key = cardKey(deckId, row.front)
+      const identifier = row.identifier && !used.has(row.identifier) ? row.identifier : undefined
+      if (identifier) used.add(identifier)
       // Only columns present in the file overwrite: a CSV without hint/extra keeps them.
       const content = {
         front: row.front,
@@ -329,66 +318,32 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
         ...(row.extra !== undefined && { extra: row.extra || null }),
       }
 
-      if (input.duplicates !== 'duplicate') {
-        const found = (row.id ? byId.get(row.id) : undefined) ?? byKey.get(key)
-        if (found) {
-          if (input.duplicates === 'skip') skipped += 1
-          else {
-            // Content is replaced and tags are merged. Progress from the file only
-            // wins when it's newer than the card's own last review, so restoring an
-            // old backup never rolls back study done since.
-            const tags = [...new Set([...found.tags, ...row.tags])]
-            const s = row.scheduling
-            const newer = s?.lastReview && (!found.lastReview || new Date(s.lastReview) > found.lastReview)
-            // A card matched by ID follows the file into another deck, at its end.
-            const moved = found.deckId !== deckId
-            if (row.history?.length) histories.push({ cardId: found.id, deckId, history: row.history })
-            // Rows that match their card exactly aren't written, so re-importing an export only touches what changed.
-            const same =
-              !moved &&
-              tags.length === found.tags.length &&
-              (Object.keys(content) as (keyof typeof content)[]).every((k) => content[k] === found[k]) &&
-              (row.suspended === undefined || row.suspended === found.suspended) &&
-              !(s && newer)
-            if (same) {
-              unchanged += 1
-              continue
-            }
-            const position = moved ? takePosition(deckId) : found.position
-            await tx
-              .update(card)
-              .set({
-                ...content,
-                tags,
-                ...(moved && { deckId, position }),
-                ...(row.suspended !== undefined && { suspended: row.suspended }),
-                ...(s && newer && progressColumns(s)),
-              })
-              .where(eq(card.id, found.id))
-            Object.assign(found, content, { tags, deckId, position })
-            if (row.suspended !== undefined) found.suspended = row.suspended
-            // Its front may have changed; later rows with the new front match it too.
-            byKey.set(key, found)
-            if (s && newer) withProgress += 1
-            updated += 1
-          }
-          continue
+      // A card the user already has only takes the file's text. Its progress,
+      // history, tags, deck and suspended flag stay as they are, and a card whose
+      // text already matches isn't written at all.
+      const found = identifier ? byIdentifier.get(identifier) : undefined
+      if (found && input.duplicates !== 'duplicate') {
+        if (input.duplicates === 'skip') skipped += 1
+        else if ((Object.keys(content) as (keyof typeof content)[]).every((k) => content[k] === found[k])) unchanged += 1
+        else {
+          await tx
+            .update(card)
+            .set(content)
+            .where(and(eq(card.id, found.id), eq(card.userId, userId)))
+          Object.assign(found, content)
+          updated += 1
         }
-        const earlier = pending.get(key)
-        if (earlier) {
-          if (input.duplicates === 'skip') skipped += 1
-          else {
-            Object.assign(earlier, content, { tags: [...new Set([...(earlier.tags ?? []), ...row.tags])] })
-            if (row.history?.length) histories.push({ cardId: earlier.id!, deckId, history: row.history })
-          }
-          continue
-        }
+        continue
       }
 
-      const position = takePosition(deckId)
+      // A new card keeps the file's identifier, so importing the file again finds
+      // it. A copy of a card the user has ("Import as new") needs a fresh one.
+      const position = nextPosition.get(deckId) ?? 0
+      nextPosition.set(deckId, position + 1)
       const s = row.scheduling
       const values: typeof card.$inferInsert = {
         id: randomUUID(),
+        identifier: identifier && !found ? identifier : '',
         userId,
         deckId,
         ...content,
@@ -397,11 +352,14 @@ export async function importRows(userId: string, input: ImportInput): Promise<Im
         suspended: row.suspended ?? false,
         ...(s && progressColumns(s)),
       }
+      if (!values.identifier) needIdentifier.push(values)
       if (s && s.state > 0) withProgress += 1
       if (row.history?.length) histories.push({ cardId: values.id!, deckId, history: row.history })
       inserts.push(values)
-      if (input.duplicates !== 'duplicate') pending.set(key, values)
     }
+    // Fresh ones must not clash with the user's cards or with any identifier in this file.
+    const fresh = await newIdentifiers(tx, userId, needIdentifier.length, new Set(fileIdentifiers))
+    needIdentifier.forEach((values, i) => (values.identifier = fresh[i]!))
 
     for (let i = 0; i < inserts.length; i += 2_000) await tx.insert(card).values(inserts.slice(i, i + 2_000))
     const reviewsImported = await insertHistory(tx, userId, histories)

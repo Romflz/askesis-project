@@ -136,6 +136,13 @@ export const card = pgTable(
     deckId: uuid('deck_id')
       .notNull()
       .references(() => deck.id, { onDelete: 'cascade' }),
+    /**
+     * The card's identity in exported and imported files, unique per user (the
+     * id stays internal). Imports match on it, and a card added from a file keeps
+     * the file's, so another account can have the same one. New cards get a short
+     * random one from the API (`newIdentifiers`), checked against the user's own.
+     */
+    identifier: text('identifier').notNull(),
     front: text('front').notNull(),
     back: text('back').notNull(),
     hint: text('hint'),
@@ -162,7 +169,11 @@ export const card = pgTable(
     lastReview: timestamp('last_review', { withTimezone: true }),
     ...timestamps,
   },
-  (t) => [index('card_user_due_idx').on(t.userId, t.due), index('card_deck_state_idx').on(t.deckId, t.state, t.due)],
+  (t) => [
+    index('card_user_due_idx').on(t.userId, t.due),
+    index('card_deck_state_idx').on(t.deckId, t.state, t.due),
+    uniqueIndex('card_user_identifier_idx').on(t.userId, t.identifier),
+  ],
 )
 
 /** One row per answer. Stats, streaks, XP and the heatmap are all derived from it. */

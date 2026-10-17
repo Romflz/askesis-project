@@ -287,7 +287,11 @@ export async function studyRoutes(app: FastifyInstance) {
         .where(and(eq(reward.userId, userId), eq(reward.kind, 'drop'), eq(reward.key, `review:${last.id}`)))
         .returning({ coins: reward.coins })
       undoneDrop = drop?.coins ?? 0
-      const [row] = await tx.update(card).set(memoryColumns(before)).where(eq(card.id, cardId)).returning()
+      const [row] = await tx
+        .update(card)
+        .set(memoryColumns(before))
+        .where(and(eq(card.id, cardId), eq(card.userId, userId)))
+        .returning()
       return row!
     })
     return { card: toQueueCard(restored), ...(undoneDrop && { undoneDrop }) }

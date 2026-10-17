@@ -21,6 +21,7 @@ import type { FastifyInstance } from 'fastify'
 import { dayConfig, ensureSetup } from '../collection.ts'
 import { db } from '../db.ts'
 import { requireSession } from '../http.ts'
+import { newIdentifiers } from '../identifiers.ts'
 import {
   deckPaths,
   defaultPresetId,
@@ -216,10 +217,12 @@ export async function libraryRoutes(app: FastifyInstance) {
       .select({ position: sql<number>`coalesce(max(${card.position}), -1)::int` })
       .from(card)
       .where(eq(card.deckId, input.deckId))
+    const [identifier] = await newIdentifiers(db, userId, 1)
     const [created] = await db
       .insert(card)
       .values({
         userId,
+        identifier: identifier!,
         ...input,
         hint: input.hint || null,
         extra: input.extra || null,
@@ -403,7 +406,7 @@ export async function libraryRoutes(app: FastifyInstance) {
           ease: reviewLog.easeAfter,
         })
         .from(reviewLog)
-        .innerJoin(card, eq(card.id, reviewLog.cardId))
+        .innerJoin(card, and(eq(card.id, reviewLog.cardId), eq(card.userId, reviewLog.userId)))
         .where(and(eq(reviewLog.userId, userId), inArray(card.deckId, ids)))
         .orderBy(asc(reviewLog.reviewedAt), asc(reviewLog.id))
       for (const l of logs) {
@@ -425,7 +428,7 @@ export async function libraryRoutes(app: FastifyInstance) {
     const content = exportCsv(
       cards
         .map((c) => ({
-          id: c.id,
+          identifier: c.identifier,
           deck: paths.get(c.deckId)!,
           front: c.front,
           back: c.back,

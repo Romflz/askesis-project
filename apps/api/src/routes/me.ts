@@ -38,6 +38,7 @@ import {
 import { db } from '../db.ts'
 import { env } from '../env.ts'
 import { requireSession } from '../http.ts'
+import { newIdentifiers } from '../identifiers.ts'
 import { pushEnabled, sendPush } from '../push.ts'
 import { selectCards, toQueueCard } from './study.ts'
 
@@ -172,7 +173,7 @@ export async function meRoutes(app: FastifyInstance) {
       await tx
         .update(card)
         .set({ ...memoryColumns(after), tags, suspended })
-        .where(eq(card.id, row.card.id))
+        .where(and(eq(card.id, row.card.id), eq(card.userId, userId)))
       const [log] = await tx
         .insert(reviewLog)
         .values({
@@ -386,11 +387,13 @@ export async function meRoutes(app: FastifyInstance) {
       const cardIds = new Map<string, string>()
       for (let i = 0; i < sim.cards.length; i += 2_000) {
         const batch = sim.cards.slice(i, i + 2_000)
+        const identifiers = await newIdentifiers(tx, userId, batch.length)
         const rows = await tx
           .insert(card)
           .values(
-            batch.map((c) => ({
+            batch.map((c, j) => ({
               userId,
+              identifier: identifiers[j]!,
               deckId: deckIds.get(c.deckId)!,
               front: c.content.front,
               back: c.content.back,

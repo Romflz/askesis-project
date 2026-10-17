@@ -117,6 +117,9 @@ pnpm --filter @askesis/web sitemap
 - Production uses migrations: run `pnpm db:generate` with every schema change and commit the SQL. The API applies
   pending migrations when it starts (`packages/db/src/migrate.ts`), so a deploy migrates the database by itself.
 - Every user-owned table references `user.id` with `on delete cascade`.
+- A card has two keys: `id`, internal and unique everywhere, and `identifier`, its identity in exported and imported
+  files, unique per user only (two accounts can share one). New cards get theirs from `newIdentifiers`
+  (`apps/api/src/identifiers.ts`). Never expose `id` in files, and filter by user whenever you look up an identifier.
 
 ## Content
 

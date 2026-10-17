@@ -401,15 +401,15 @@ export const importReview = z.object({
   ease: z.number().min(0).max(10),
 })
 
-/**
- * A card ID as files carry it (any UUID, lowercase). Looser than `z.uuid()` on
- * purpose: an ID that isn't one of the user's cards is simply not matched.
- */
-export const CARD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+/** Longest card identifier a file may carry. */
+export const IDENTIFIER_MAX = 200
 
 export const importRow = z.object({
-  /** The ID of an existing card (the `id` column of an export). That card is updated, whatever its front or deck. */
-  id: z.string().regex(CARD_ID).optional(),
+  /**
+   * The card's identifier (the `identifier` column of an export), unique per user:
+   * the user's card with it is updated, otherwise a new card keeps it.
+   */
+  identifier: z.string().trim().min(1).max(IDENTIFIER_MAX).optional(),
   /** Deck path ("Parent::Child"); null uses the import's default deck. */
   deck: z.string().trim().max(400).nullable(),
   front: cardText.trim().min(1),
@@ -426,8 +426,8 @@ export type ImportRow = z.infer<typeof importRow>
 
 /**
  * Decks are matched by full path (case-insensitive) and merged, never replaced.
- * A row matches an existing card by ID, or without one by the same front in the
- * same deck; matches are updated, skipped or duplicated.
+ * Cards are matched by ID only: a match is updated, skipped or duplicated, and
+ * every other row is a new card.
  */
 export const importInput = z.object({
   rows: z.array(importRow).min(1).max(50_000),

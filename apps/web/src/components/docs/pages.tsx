@@ -1238,8 +1238,8 @@ Geography,{{c1::Canberra::city}} is the capital of Australia.,,,,capitals`}
       />
       <p>
         Askesis doesn’t create reverse cards for you, so add the second card yourself; in a file it’s just another row. Give it a
-        different front: in the same deck, a card with the same front counts as a duplicate when you import. Only add the reverse
-        when you need it. Recognizing a word is often enough, and every card adds reviews.
+        different front, so you can tell the two apart. Only add the reverse when you need it. Recognizing a word is often enough,
+        and every card adds reviews.
       </p>
 
       <H2 id="fields">Hints and extras</H2>
@@ -1418,7 +1418,7 @@ const importExport: DocPage = {
     { id: 'format', label: 'File format' },
     { id: 'headers', label: 'Header lines' },
     { id: 'columns', label: 'Columns' },
-    { id: 'ids', label: 'Card IDs' },
+    { id: 'identifiers', label: 'Card identifiers' },
     { id: 'importing', label: 'Importing' },
     { id: 'merge', label: 'How merging works' },
     { id: 'exporting', label: 'Exporting' },
@@ -1497,10 +1497,10 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
           [<C>hint</C>, 'reading', 'A small line under the front.'],
           [<C>extra</C>, 'notes, note', 'Shown under the answer.'],
           [
-            <C>id</C>,
-            '',
+            <C>identifier</C>,
+            'id',
             <>
-              The card’s ID, in exports. Leave it empty for new cards (see <a href="#ids">Card IDs</a>).
+              The card’s identifier, in exports. Leave it empty for new cards (see <a href="#identifiers">Card identifiers</a>).
             </>,
           ],
         ]}
@@ -1511,21 +1511,22 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         can also carry each card’s study progress and review history, see <a href="#progress">Progress columns</a>.
       </p>
 
-      <H2 id="ids">Card IDs</H2>
+      <H2 id="identifiers">Card identifiers</H2>
       <p>
-        Every card has an ID that never changes, like <C>3f2b8c1e-7a4d-4e9b-9c2a-5d6e7f8a9b0c</C>. Exports put it in an <C>id</C>{' '}
+        Every card has an identifier that never changes, a short code like <C>k7m2qp</C>. Exports put it in an <C>identifier</C>{' '}
         column after the tags, so you can edit a deck in a spreadsheet and import it back:
       </p>
       <ul>
         <li>
-          <strong>A row with an ID updates that card</strong>, even if you changed its front or moved it to another deck in the
-          file. A stray space or a fixed typo never creates a second card.
+          <strong>A row with your card’s identifier updates that card’s text</strong>: front, back, hint and extra. A stray space
+          or a fixed typo never creates a second card. The card keeps its progress, review history, tags and deck.
         </li>
         <li>
-          <strong>A row with an empty ID is a new card.</strong> Askesis gives it an ID when you import.
+          <strong>A row with an empty identifier is a new card.</strong> Askesis makes one for it when you import.
         </li>
         <li>
-          <strong>Don’t copy an ID to another row</strong>: both rows would update the same card.
+          <strong>An identifier belongs to one row.</strong> If a row is copied with its identifier, only the first one updates
+          the card; the copy becomes a new card, and the import dialog tells you how many rows repeat one.
         </li>
         <li>
           <strong>Deleting a row doesn’t delete the card.</strong> Importing never deletes anything; delete cards in the card
@@ -1533,8 +1534,15 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         </li>
       </ul>
       <p>
-        IDs only match your own cards. When you import a file someone else exported, its IDs match nothing, and cards are matched
-        by deck and front instead.
+        Identifiers are unique within your account, and an import only ever looks at your own cards. A row whose identifier you
+        don’t have, from a deck someone shared or a backup of another account, becomes a new card with that same identifier, so
+        importing the file again updates it instead of adding a copy. Another account with the same identifier is never affected,
+        and an import never fails over one.
+      </p>
+      <p>
+        Cards are matched by identifier only, never by their text. A file without identifiers (one you wrote, one an AI assistant
+        made, or one from another app) adds all its cards each time you import it. After importing it, export the deck to get a
+        file with identifiers for editing.
       </p>
 
       <H2 id="importing">Importing</H2>
@@ -1559,9 +1567,8 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
           same path. Nothing is ever deleted, so you can import into a deck again and again.
         </li>
         <li>
-          <strong>Cards that already exist</strong> are matched by <a href="#ids">card ID</a> first. A row without one (or with an
-          ID that isn’t one of your cards) matches a card in the same deck with the same front, ignoring extra spaces. You choose
-          what happens to a match:
+          <strong>Cards that already exist</strong> are matched by <a href="#identifiers">identifier</a>. A row without one, or
+          with one none of your cards has, is a new card. You choose what happens to a match:
         </li>
       </ul>
       <Table
@@ -1569,10 +1576,10 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         rows={[
           [
             <strong>Update</strong>,
-            'Default. The front, back, hint and extra are replaced, tags are merged, and the review history is kept. Cards that already match the file exactly aren’t touched (they count as unchanged), and rows that match nothing are added, so importing an edited export updates what changed and adds what’s new.',
+            'Default. The front, back, hint and extra are replaced; the card keeps its progress, review history, tags and deck. Cards whose text already matches the file aren’t touched (they count as unchanged), and rows that match nothing are added, so importing an edited export updates what changed and adds what’s new.',
           ],
           [<strong>Skip</strong>, 'Existing cards are left alone.'],
-          [<strong>Import as new</strong>, 'A second copy is added, with a new ID.'],
+          [<strong>Import as new</strong>, 'A second copy is added, with a new identifier.'],
         ]}
       />
 
@@ -1598,14 +1605,14 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
         ]}
       />
       <p>
-        Every export has the <C>id</C> column, so importing the file again updates the same cards. Your choice is remembered on
-        this device. With both ticked, the file is a complete backup. To share cards so others start fresh, untick{' '}
+        Every export has the <C>identifier</C> column, so importing the file again updates the same cards. Your choice is
+        remembered on this device. With both ticked, the file is a complete backup. To share cards so others start fresh, untick{' '}
         <strong>Study progress</strong>, which leaves out the history too. Other flashcard apps usually ignore these columns on
         import; Askesis restores them.
       </p>
 
       <H2 id="progress">Progress columns</H2>
-      <p>With progress included, these columns follow the tags and the ID, in this order:</p>
+      <p>With progress included, these columns follow the tags and the identifier, in this order:</p>
       <Code code="state, due, interval, ease, stability, difficulty, step, reps, lapses, last_review, suspended, history" />
       <Table
         head={['Column', 'Meaning']}
@@ -1668,16 +1675,16 @@ Neuroscience,"Who coined the term ""engram""?","Richard Semon, in 1904",,,histor
       <H2 id="restoring">Restoring a backup</H2>
       <ul>
         <li>
-          <strong>Cards that are new in the file stay new.</strong> Cards you don’t have yet are added with the file’s progress.
+          <strong>Cards you don’t have yet</strong> are added with the file’s progress and review history. Cards that are new in
+          the file stay new.
         </li>
         <li>
-          <strong>Cards you already have</strong> (same ID, or same deck and front, with Update chosen) take the file’s progress
-          only when its <C>last_review</C> is newer than the card’s own. Restoring an old backup never rolls back study you did
-          since.
+          <strong>Cards you already have</strong> (same identifier) keep their own progress and history. Restoring a backup never
+          changes study you already have.
         </li>
         <li>
-          <strong>History is merged</strong> into your review log without duplicates: an answer for the same card at the same
-          moment, to the millisecond, is skipped. Importing the same backup twice is safe.
+          <strong>Importing the same backup twice is safe</strong>: the cards it added keep the file’s identifiers, so the second
+          import finds them and adds nothing.
         </li>
         <li>
           <strong>Imported history counts everywhere</strong>: the heatmap, streaks, XP, trophies and every chart (
@@ -1870,10 +1877,10 @@ One fact per card. Use \\( … \\) for math and fenced code blocks with a langua
 Output only the CSV file, starting with the five header lines.`}
       />
       <p>
-        To change cards you already have, export their deck and give the file to the agent. Each row’s <C>id</C> says which card
-        it is, so importing the edited file with <strong>Update</strong> changes those cards instead of adding copies (
-        <DocLink slug="import-export" hash="ids">
-          card IDs
+        To change cards you already have, export their deck and give the file to the agent. Each row’s <C>identifier</C> says
+        which card it is, so importing the edited file with <strong>Update</strong> changes those cards instead of adding copies (
+        <DocLink slug="import-export" hash="identifiers">
+          card identifiers
         </DocLink>
         ):
       </p>
@@ -1881,8 +1888,8 @@ Output only the CSV file, starting with the five header lines.`}
         label="edit-prompt.txt"
         code={`Follow the Askesis card file spec at <site>/llms.txt exactly.
 The attached file is an Askesis export. <What to change, e.g. fix typos and add an example sentence to each extra.>
-Keep the header lines and the id column. Don't change, copy or invent an id.
-Add new cards as new rows with an empty id.
+Keep the header lines and the identifier column. Don't change or copy an identifier.
+Add new cards as new rows with an empty identifier.
 Output the whole CSV file.`}
       />
 

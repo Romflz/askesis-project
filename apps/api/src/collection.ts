@@ -16,6 +16,7 @@ import {
 } from '@askesis/core'
 import { and, asc, eq, schema } from '@askesis/db'
 import { db } from './db.ts'
+import { newIdentifiers } from './identifiers.ts'
 
 const { userSettings, deckPreset, deck, card, reviewLog, streakFreeze, reward, dailyQuest } = schema
 
@@ -142,7 +143,16 @@ export async function ensureSetup(userId: string, timeZone?: string) {
           position: i,
         })
         .returning({ id: deck.id })
-      await tx.insert(card).values(starter.cards.map((c, position) => ({ userId, deckId: created!.id, ...c, position })))
+      const identifiers = await newIdentifiers(tx, userId, starter.cards.length)
+      await tx.insert(card).values(
+        starter.cards.map((c, position) => ({
+          userId,
+          deckId: created!.id,
+          identifier: identifiers[position]!,
+          ...c,
+          position,
+        })),
+      )
     }
     // A labelled head start, so a new account's level bar isn't empty.
     await tx

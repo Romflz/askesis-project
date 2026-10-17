@@ -194,7 +194,10 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
     }
     setProgress({ done: 0, total })
     let done = 0
-    for (const rows of batches(file.rows)) {
+    // Rows with an identifier go first, so the ones the server makes up for the rest
+    // (checked against the cards already saved) can't clash with a later batch's.
+    const ordered = [...file.rows.filter((r) => r.identifier), ...file.rows.filter((r) => !r.identifier)]
+    for (const rows of batches(ordered)) {
       const r = await importCards({ data: { rows, defaultDeck: fallbackDeck, duplicates } })
       sum.added += r.added
       sum.updated += r.updated
@@ -346,8 +349,9 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
           <div className="deckmgr-import-help">
             <p>
               Columns can be named in a header row (<code>front</code>, <code>back</code>, <code>deck</code>, <code>tags</code>,{' '}
-              <code>hint</code>, <code>extra</code>, <code>id</code>) or with header lines like <code>#separator:tab</code> and{' '}
-              <code>#deck column:1</code>. Without either, the first column is the front and the second the back.
+              <code>hint</code>, <code>extra</code>, <code>identifier</code>) or with header lines like{' '}
+              <code>#separator:tab</code> and <code>#deck column:1</code>. Without either, the first column is the front and the
+              second the back.
             </p>
             <button type="button" className="link-button" onClick={() => downloadText('askesis-template.csv', templateCsv())}>
               <FileDown size={14} /> Download a template CSV
@@ -462,6 +466,12 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
               {built && built.skipped > 0 && (
                 <span className="deckmgr-import__n">· {fmtInt(built.skipped)} rows without a front will be skipped</span>
               )}
+              {built && built.repeatedIdentifiers > 0 && (
+                <span className="deckmgr-import__n">
+                  · {fmtInt(built.repeatedIdentifiers)} {built.repeatedIdentifiers === 1 ? 'row repeats' : 'rows repeat'} an
+                  earlier row’s identifier; only the first updates that card
+                </span>
+              )}
             </h3>
             <div className="deckmgr-import__preview">
               {preview.map((row, i) => (
@@ -526,12 +536,12 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
             <section className="deckmgr-import__section">
               <h3 className="eyebrow">Cards that already exist</h3>
               <p className="deckmgr-import__hint">
-                Matched by card ID (the id column of an Askesis export), or else by the same front in the same deck.
+                Matched by identifier (the identifier column of an Askesis export). Rows without one are added as new cards.
               </p>
               <div className="deckmgr-radios" role="radiogroup" aria-label="Duplicates">
                 {(
                   [
-                    ['update', 'Update them', 'Replace front, back, hint and extra; merge tags; keep review history.'],
+                    ['update', 'Update them', 'Replace front, back, hint and extra; keep progress, history, tags and deck.'],
                     ['skip', 'Skip them', 'Leave existing cards exactly as they are.'],
                     ['duplicate', 'Import as new', 'Add a second copy.'],
                   ] as const
@@ -563,8 +573,8 @@ export function ImportDialog({ open, library, onClose }: { open: boolean; librar
                   and {fmtInt(pastReviews)} past {pastReviews === 1 ? 'review' : 'reviews'}
                 </>
               )}
-              . Cards that are new in the file stay new. Cards you already have only take the file’s progress when its last review
-              is newer than yours; past reviews are merged without duplicates.
+              . It comes in with the cards you don’t have yet. Cards you already have keep their own progress and history; only
+              their text is updated.
             </p>
           )}
         </div>

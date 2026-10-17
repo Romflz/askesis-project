@@ -60,8 +60,8 @@ that render correctly. Follow it literally.
 8. Backslashes are literal in CSV. Write \frac, not \\frac.
 9. Never emit HTML. Use the light markup in section 6.
 10. Editing cards the user already has? Start from their Askesis export and
-    keep its id column: every row's id stays exactly as it is, new rows get an
-    empty id, and you never invent one (section 5).
+    keep its identifier column: every row's identifier stays exactly as it is,
+    new rows get an empty one, and you never copy one (section 5).
 
 ## 2. File structure
 
@@ -100,7 +100,7 @@ is the front and column 2 is the back.
 | hint | hint, reading | no | ${LIMITS.hint} | Small line under the front (e.g. a reading). |
 | extra | extra, notes, note | no | ${LIMITS.extra} | Shown under the answer: context, mnemonics, sources. |
 | tags | tags, tag | no | ${LIMITS.tags} tags × ${LIMITS.tagLength} chars | Separated by spaces. "parent${DECK_PATH_SEPARATOR}child" nests a tag under another. |
-| id | id | no | a UUID | The card's ID, from an Askesis export (section 5). Empty for a new card. |
+| identifier | identifier, id | no | 200 | The card's identifier, from an Askesis export (section 5). Empty for a new card. |
 
 Column names are case-insensitive. Unknown columns are ignored.
 Optional progress and history columns (for backups) are listed in section 7. Exports from other apps are covered in sections 8–9.
@@ -118,47 +118,53 @@ deleting a parent tag also renames or removes the tags below it.
 - Importing into an existing deck **merges**: cards are added; nothing is ever deleted.
 - Studying a parent deck includes all its subdecks.
 
-## 5. Card IDs, duplicates and updates
+## 5. Card identifiers, duplicates and updates
 
-Every Askesis card has an ID: a UUID such as
-3f2b8c1e-7a4d-4e9b-9c2a-5d6e7f8a9b0c, assigned when the card is created and
-never changed. Exports put it in an id column, right after tags.
+Every Askesis card has an identifier: a short code such as k7m2qp, made when
+the card is created and never changed. Exports put it in an identifier column,
+right after tags. Identifiers are unique **per user**: one account can't have
+two cards with the same identifier, but two accounts can each have a card with
+the same one, and neither ever sees or changes the other's.
 
-A row matches an existing card of the user's:
+Cards are matched **by identifier only**, never by their text. For each row:
 
-1. **By ID**: the row's id is one of the user's cards. That card is the match,
-   even if the file changes its front or puts it in another deck (it moves
-   there). IDs compare case-insensitively.
-2. **Otherwise by front**: a card in the **same deck** whose front matches after
-   trimming and collapsing whitespace (case-sensitive). This covers files
-   without ids, and ids that aren't the user's cards (a file someone else
-   exported, or a card that was deleted).
+1. **The identifier is one of the importing user's cards**: that card is the
+   match.
+2. **The user has no card with that identifier** (a deck someone shared, a
+   backup of another account, a card that was deleted): a new card is added
+   with that same identifier, so importing the file again finds it.
+3. **No identifier**: a new card, and Askesis makes up an identifier for it.
 
-A row with no match is a new card and gets a new ID; the id in the file is
-never reused for it. An id that isn't a UUID is ignored. The importer offers
-three modes for rows that match:
+Identifiers are compared exactly (letter case counts), are at most 200
+characters, and may be any text, so a file from another tool can bring its own
+(kanji-0001). Only the first row with a given identifier uses it: a later row
+with the same one is a new card. An import never fails over an identifier. The
+importer offers three modes for rows that match:
 
 | Mode | What happens to a match |
 |---|---|
-| update (default) | front and back are replaced; hint and extra are replaced only if the file has those columns; tags are merged; review history is kept; progress and history from the file follow section 7 |
-| skip | left alone (the file's progress and history are ignored too) |
-| duplicate | imported as an additional card with a new ID |
+| update (default) | front and back are replaced, and hint and extra too if the file has those columns. Nothing else changes: the card keeps its progress, review history, tags, deck and suspended flag |
+| skip | left alone |
+| duplicate | imported as an additional card with a new identifier |
 
-So in update mode an import is an upsert: rows with a known id update their
-card, and the rest are added. A match that already equals its card (same text,
-no new tags, no newer progress) isn't written and is reported as unchanged, so
-re-importing an export only touches what you edited. Rows inside one file that share a deck and front
-are treated the same way (the later row updates the earlier one in update
-mode). Importing never deletes anything: a card whose row you remove from the
-file stays as it is.
+So in update mode an import is an upsert: rows with a known identifier update
+their card's text, and the rest are added. A match whose text already equals
+the file isn't written and is reported as unchanged, so re-importing a file
+only touches what you edited. Importing never deletes anything: a card whose
+row you remove from the file stays as it is.
+
+Rows without an identifier get a new one each time, so importing the same file
+of new cards twice gives two copies. After importing new cards, export again
+to get a file with their identifiers.
 
 To change cards the user already has, edit their export:
 
-- Keep the header lines and the id column, and leave every id exactly as it is.
-- Edit fronts, backs, hints, extras and decks freely. Tags in the file are
-  added to the card's own; taking a tag out of the file doesn't remove it.
-- Add new cards as new rows with an empty id. Never invent or copy an id: a
-  copied id would overwrite the card it belongs to.
+- Keep the header lines and the identifier column, and leave every identifier
+  exactly as it is.
+- Edit fronts, backs, hints and extras. A card's deck, tags, suspended flag
+  and progress don't change on import; change those in Askesis.
+- Add new cards as new rows with an empty identifier; Askesis makes one. Never
+  copy an identifier from another row: only the first row with it uses it.
 - Import the file with mode "update".
 
 ## 6. Card text syntax
@@ -210,10 +216,10 @@ Fenced block, with an optional language after the opening fence:
 
 ## 7. Progress and history columns (optional: for backups and migrations)
 
-Append these columns, in this order, after tags and id: ${[...SCHEDULING_COLUMNS, 'history'].join(', ')}.
+Append these columns, in this order, after tags and identifier: ${[...SCHEDULING_COLUMNS, 'history'].join(', ')}.
 The #columns line of a full export then reads:
 
-    #columns:deck,front,back,hint,extra,tags,id,${PROGRESS_COLUMNS}
+    #columns:deck,front,back,hint,extra,tags,identifier,${PROGRESS_COLUMNS}
 
 Leave all of them empty (or leave the columns out) for a new, unstudied card.
 When you generate new cards, don't add them at all.
@@ -264,14 +270,13 @@ file. In a semicolon-separated file it must be quoted.
 
 ### How progress and history import
 
-- Cards that don't exist yet are added with the file's progress. Cards that
-  are new in the file (state 0, or no progress) stay new.
-- For an existing card (same id, or same deck and front; update mode), the file's
-  progress is applied only when its last_review is newer than the card's own,
-  so restoring an old backup never rolls back newer study.
-- History is merged into the review log without duplicates: an answer for
-  the same card at the same timestamp (to the millisecond) is skipped, so
-  importing a backup twice is safe.
+- Cards that don't exist yet are added with the file's progress and history.
+  Cards that are new in the file (state 0, or no progress) stay new.
+- Cards the user already has (same identifier) keep their own progress and history;
+  the file's progress and history columns are ignored for them. Restoring a
+  backup never changes study you already have.
+- Because added cards keep the file's identifiers, importing the same backup twice
+  adds nothing the second time.
 - Imported history restores the heatmap, streaks, XP, trophies and stats.
   Imported answers can't be undone in a study session.
 - The import result reports "Progress kept for N cards" and "N past reviews
@@ -325,7 +330,7 @@ math: [$]…[/$] becomes \( … \), and [$$]…[/$$] and [latex]…[/latex] beco
 - Prefer several small cards over one list card ("Name all 7 …").
 - Use subdecks for topics (Medical${DECK_PATH_SEPARATOR}Cells) and tags for cross-cutting labels (exam-1, hard).
 - Don't create duplicates of the same front inside one deck.
-- Leave the id empty for every card you create.
+- Leave the identifier empty for every card you create.
 
 ## 12. Examples
 
@@ -356,20 +361,20 @@ math: [$]…[/$] becomes \( … \), and [$$]…[/$$] and [latex]…[/latex] beco
     ${'```'}","${'`'}[0, 1, 4, 9]${'`'}",,,comprehensions
     Physics,"Who said ""Imagination is more important than knowledge""?",Albert Einstein,,,quotes
 
-### Editing an export (card IDs)
+### Editing an export (identifiers)
 
 The user exported Spanish::Verbs and asked for a fixed typo, a better back and
 one more card. Row 1 changes its front, row 2 its back and tags; both keep
-their id, so the import updates those two cards. Row 3 is new, so its id is
-empty.
+their identifier, so the import updates those two cards. Row 3 is new, so its
+identifier is empty.
 
     #separator:comma
     #html:false
-    #columns:deck,front,back,hint,extra,tags,id
+    #columns:deck,front,back,hint,extra,tags,identifier
     #deck column:1
     #tags column:6
-    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e
-    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs b1,1c2d3e4f-5a6b-4c7d-9e8f-a0b1c2d3e4f5
+    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,k7m2qp
+    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs b1,r4xh9w
     Spanish::Verbs,soler,to usually do something,,Suelo levantarme temprano.,verbs,
 
 ### Tab-separated, no header lines (front, back)
@@ -379,20 +384,20 @@ empty.
 
 ### Backup with progress and history
 
-As Askesis exports it, with each card's id. Row 1 is a review card with its
+As Askesis exports it, with each card's identifier. Row 1 is a review card with its
 full history, row 2 is in its learning steps (step 1), row 3 is new, and row 4
 is a suspended FSRS card whose history only gives time and rating. A file
-converted from another app has the same columns with every id empty.
+converted from another app has the same columns with every identifier empty.
 
     #separator:comma
     #html:false
-    #columns:deck,front,back,hint,extra,tags,id,${PROGRESS_COLUMNS}
+    #columns:deck,front,back,hint,extra,tags,identifier,${PROGRESS_COLUMNS}
     #deck column:1
     #tags column:6
-    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e,2,2026-03-05T09:30:00.000Z,3,2.5,0,0,0,3,0,2026-03-02T09:30:00.000Z,,2026-03-01T09:12:00Z 3 5200 0 1 0 0 0;2026-03-01T09:22:40Z 3 3100 1 2 0 1 2.5;2026-03-02T09:30:00Z 3 2800 2 2 1 3 2.5
-    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs,1c2d3e4f-5a6b-4c7d-9e8f-a0b1c2d3e4f5,1,2026-03-02T09:50:00.000Z,0,0,0,0,1,1,0,2026-03-02T09:40:00.000Z,,2026-03-02T09:40:00Z 3 4100 0 1 0 0 0
-    Spanish::Verbs,soler,to usually do something,,,verbs,2d3e4f5a-6b7c-4d8e-8f9a-b1c2d3e4f5a6,,,,,,,,,,,,
-    Medical::Cells,What organelle makes most of a cell's ATP?,The mitochondrion,,,cell-biology,3e4f5a6b-7c8d-4e9f-9a0b-c2d3e4f5a6b7,2,2026-05-20T08:00:00.000Z,30,2.5,31.2,5.1,0,6,1,2026-04-20T08:00:00.000Z,1,2026-03-20T08:00:00Z 1;2026-04-20T08:00:00Z 3
+    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,k7m2qp,2,2026-03-05T09:30:00.000Z,3,2.5,0,0,0,3,0,2026-03-02T09:30:00.000Z,,2026-03-01T09:12:00Z 3 5200 0 1 0 0 0;2026-03-01T09:22:40Z 3 3100 1 2 0 1 2.5;2026-03-02T09:30:00Z 3 2800 2 2 1 3 2.5
+    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs,r4xh9w,1,2026-03-02T09:50:00.000Z,0,0,0,0,1,1,0,2026-03-02T09:40:00.000Z,,2026-03-02T09:40:00Z 3 4100 0 1 0 0 0
+    Spanish::Verbs,soler,to usually do something,,,verbs,b8tn3e,,,,,,,,,,,,
+    Medical::Cells,What organelle makes most of a cell's ATP?,The mitochondrion,,,cell-biology,w2fq7c,2,2026-05-20T08:00:00.000Z,30,2.5,31.2,5.1,0,6,1,2026-04-20T08:00:00.000Z,1,2026-03-20T08:00:00Z 1;2026-04-20T08:00:00Z 3
 
 ## 13. Defaults you can rely on
 
