@@ -57,6 +57,9 @@ import { KOREAN_HANGUL } from './korean-hangul.ts'
 import { KOTLIN } from './kotlin.ts'
 import { KUBERNETES } from './kubernetes.ts'
 import { LINEAR_ALGEBRA } from './linear-algebra.ts'
+import { LINUX_FILESYSTEM_ADVANCED } from './linux-filesystem-advanced.ts'
+import { LINUX_FILESYSTEM_BASICS } from './linux-filesystem-basics.ts'
+import { LINUX_FILESYSTEM_INTERMEDIATE } from './linux-filesystem-intermediate.ts'
 import { LINUX } from './linux.ts'
 import { MACHINE_LEARNING } from './machine-learning.ts'
 import { MANDARIN_HSK1 } from './mandarin-hsk1.ts'
@@ -174,6 +177,9 @@ export const PUBLIC_DECKS: PublicDeck[] = [
   PROMPT_ENGINEERING,
   // IT & DevOps
   LINUX,
+  LINUX_FILESYSTEM_BASICS,
+  LINUX_FILESYSTEM_INTERMEDIATE,
+  LINUX_FILESYSTEM_ADVANCED,
   BASH_SCRIPTING,
   VIM,
   NETWORKING,

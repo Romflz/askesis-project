@@ -19,7 +19,7 @@ Version **1.0.0** · [License](#license) · Free for personal and community use 
   something is due.
 - **Progress you can feel.** Every answer earns XP; streaks have freezes; a daily chest gets better with your streak;
   six daily quests; 36 trophies; an analytics page with forecasts, true retention and your toughest cards.
-- **Free practice decks.** 96 public decks (4,800 cards) from Japanese, Spanish and Arabic to Java, Haskell, AWS and engineering,
+- **Free practice decks.** 99 public decks (4,950 cards) from Japanese, Spanish and Arabic to Java, Haskell, AWS and engineering,
   studyable without an account.
 - **Self-hostable.** One web app, one API, one Postgres. No ads. askesisproject.org uses opt-in analytics; a
   self-hosted copy sends nothing unless you give it a PostHog key.
