@@ -379,19 +379,20 @@ empty.
 
 ### Backup with progress and history
 
-Row 1 is a review card with its full history, row 2 is in its learning steps
-(step 1), row 3 is new, and row 4 is a suspended FSRS card whose history only
-gives time and rating.
+As Askesis exports it, with each card's id. Row 1 is a review card with its
+full history, row 2 is in its learning steps (step 1), row 3 is new, and row 4
+is a suspended FSRS card whose history only gives time and rating. A file
+converted from another app has the same columns with every id empty.
 
     #separator:comma
     #html:false
-    #columns:deck,front,back,hint,extra,tags,${PROGRESS_COLUMNS}
+    #columns:deck,front,back,hint,extra,tags,id,${PROGRESS_COLUMNS}
     #deck column:1
     #tags column:6
-    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,2,2026-03-05T09:30:00.000Z,3,2.5,0,0,0,3,0,2026-03-02T09:30:00.000Z,,2026-03-01T09:12:00Z 3 5200 0 1 0 0 0;2026-03-01T09:22:40Z 3 3100 1 2 0 1 2.5;2026-03-02T09:30:00Z 3 2800 2 2 1 3 2.5
-    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs,1,2026-03-02T09:50:00.000Z,0,0,0,0,1,1,0,2026-03-02T09:40:00.000Z,,2026-03-02T09:40:00Z 3 4100 0 1 0 0 0
-    Spanish::Verbs,soler,to usually do something,,,verbs,,,,,,,,,,,,
-    Medical::Cells,What organelle makes most of a cell's ATP?,The mitochondrion,,,cell-biology,2,2026-05-20T08:00:00.000Z,30,2.5,31.2,5.1,0,6,1,2026-04-20T08:00:00.000Z,1,2026-03-20T08:00:00Z 1;2026-04-20T08:00:00Z 3
+    Spanish::Verbs,aprovechar,to make the most of,,,verbs b2,9b1d2c3e-4f5a-4b6c-8d7e-0f1a2b3c4d5e,2,2026-03-05T09:30:00.000Z,3,2.5,0,0,0,3,0,2026-03-02T09:30:00.000Z,,2026-03-01T09:12:00Z 3 5200 0 1 0 0 0;2026-03-01T09:22:40Z 3 3100 1 2 0 1 2.5;2026-03-02T09:30:00Z 3 2800 2 2 1 3 2.5
+    Spanish::Verbs,acertar,to get right; to guess correctly,,,verbs,1c2d3e4f-5a6b-4c7d-9e8f-a0b1c2d3e4f5,1,2026-03-02T09:50:00.000Z,0,0,0,0,1,1,0,2026-03-02T09:40:00.000Z,,2026-03-02T09:40:00Z 3 4100 0 1 0 0 0
+    Spanish::Verbs,soler,to usually do something,,,verbs,2d3e4f5a-6b7c-4d8e-8f9a-b1c2d3e4f5a6,,,,,,,,,,,,
+    Medical::Cells,What organelle makes most of a cell's ATP?,The mitochondrion,,,cell-biology,3e4f5a6b-7c8d-4e9f-9a0b-c2d3e4f5a6b7,2,2026-05-20T08:00:00.000Z,30,2.5,31.2,5.1,0,6,1,2026-04-20T08:00:00.000Z,1,2026-03-20T08:00:00Z 1;2026-04-20T08:00:00Z 3
 
 ## 13. Defaults you can rely on
 
