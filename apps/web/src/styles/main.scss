@@ -13,6 +13,7 @@
 @use 'components/card-text';
 @use 'components/toploader';
 @use 'components/grade';
+@use 'components/cookie-banner';
 
 @use 'home/layout';
 @use 'home/hero';
@@ -36,5 +37,6 @@
 @use 'practice/practice';
 @use 'analytics/analytics';
 @use 'shop/shop';
+@use 'info/info';
 
 @use 'legacy';

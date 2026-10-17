@@ -13,6 +13,7 @@ import {
   useTags,
 } from '@tanstack/react-router'
 import { type ReactNode, useEffect } from 'react'
+import { CookieBanner } from '../components/askesis/CookieBanner.tsx'
 import { themeScript, TopBar } from '../components/askesis/TopBar.tsx'
 import { TopLoader } from '../components/askesis/TopLoader.tsx'
 import { registerPwa } from '../lib/pwa.ts'
@@ -108,6 +109,7 @@ function RootLayout() {
       <TopLoader />
       {!ownChrome && <TopBar user={user} />}
       <Outlet />
+      <CookieBanner />
     </>
   )
 }

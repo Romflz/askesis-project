@@ -132,14 +132,24 @@ export function StudySession({ queue, search }: { queue: StudyQueue; search: Stu
     if (el) cardRef.current = el
   }, [])
 
-  // Clocks run only after mount, so the server render has no time in it.
+  // Clocks run only after mount, so the server render has no time in it. The
+  // session clock stops when the summary shows; an undo from there resumes it
+  // without counting the time spent on the summary.
+  const ended = state.finished || (!state.current && state.waitingUntil === null)
+  const endedAt = useRef<number | null>(null)
   useEffect(() => {
-    const start = Date.now()
-    setStartedAt(start)
-    setNow(start)
+    const at = Date.now()
+    setNow(at)
+    if (ended) {
+      endedAt.current = at
+      return
+    }
+    const paused = endedAt.current === null ? 0 : at - endedAt.current
+    endedAt.current = null
+    setStartedAt((start) => (start === null ? at : start + paused))
     const timer = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [ended])
 
   useEffect(() => {
     if (now !== null && state.waitingUntil !== null) dispatch({ type: 'tick', now })
@@ -857,14 +867,14 @@ export function StudySession({ queue, search }: { queue: StudyQueue; search: Stu
         </div>
       )}
 
-      <div className="toasts study-toasts" role="status" aria-live="polite">
+      <div className="toasts" role="status" aria-live="polite">
         <AnimatePresence initial={false}>
           {toasts.map((t) => (
             <motion.div
               key={t.id}
               layout
               className={`toast toast--study-${t.tone}`}
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, transition: { duration: 0.15 } }}
             >

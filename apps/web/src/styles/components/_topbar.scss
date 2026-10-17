@@ -365,14 +365,10 @@
   }
 }
 
-// Keep page content and toasts clear of the tab bar on phones.
+// Keep page content clear of the tab bar on phones.
 @include down(md) {
   body:has(.tabbar) {
     padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
-  }
-
-  body:has(.tabbar) .toasts {
-    bottom: calc(5rem + env(safe-area-inset-bottom));
   }
 }
 

@@ -11,14 +11,15 @@ import { hasSessionCookie } from './session-cookie.ts'
 // from the session, and a prerendered file would show the guest bar to
 // signed-in users. Requests with a session cookie always render fresh.
 //
-// Docs, practice and topic pages only change with a deploy (which empties the
-// cache); the home page's and the analytics page's demos are built from the
+// Docs, practice, topic, about, contact and legal pages only change with a
+// deploy (which empties the cache); the home page's and the analytics page's demos are built from the
 // current time, so they're kept for a minute.
 
 const PAGES: { match: RegExp; ttlMs: number }[] = [
   { match: /^\/(analytics)?$/, ttlMs: 60_000 },
   { match: /^\/(docs|practice)(\/[\w-]+)?$/, ttlMs: 60 * 60_000 },
   { match: /^\/learn\/[\w-]+$/, ttlMs: 60 * 60_000 },
+  { match: /^\/(about|contact|terms|privacy|cookies)$/, ttlMs: 60 * 60_000 },
 ]
 
 interface Entry {

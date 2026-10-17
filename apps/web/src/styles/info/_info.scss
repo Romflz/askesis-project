@@ -1,0 +1,407 @@
+@use '../mixins' as *;
+
+// The about, contact, terms, privacy and cookie pages: a narrow column with a
+// hero, prose, value cards, contact options and the cookie choice.
+
+.info-page {
+  // Not positioned on purpose: the glow below then spans the full window width
+  // (the initial containing block) instead of stopping at this column's edges.
+  // isolation keeps its z-index: -1 in front of the page background.
+  isolation: isolate;
+  display: grid;
+  gap: 2.5rem;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 6rem;
+
+  @include up(sm) {
+    padding: 2.75rem 1.5rem 6rem;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    height: 28rem;
+    pointer-events: none;
+    background:
+      radial-gradient(34rem 16rem at 15% 0%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%),
+      radial-gradient(28rem 16rem at 85% 8%, color-mix(in oklab, var(--xp) 9%, transparent), transparent 70%);
+    mask-image: linear-gradient(#000 60%, transparent);
+  }
+}
+
+.info-hero {
+  max-width: 40rem;
+
+  &__title {
+    margin-top: 0.6rem;
+    font-size: clamp(2.1rem, 6vw, 3.25rem);
+    font-weight: 650;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
+  }
+
+  &__lead {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: var(--ink-2);
+  }
+
+  &__meta {
+    margin-top: 1rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+.info-section-title {
+  margin-bottom: 1rem;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.info-prose {
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+
+  > * + * {
+    margin-top: 1rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  // More room above each heading after the first than between paragraphs.
+  > * + h2 {
+    margin-top: 2.25rem;
+  }
+
+  em {
+    color: var(--ink);
+  }
+
+  strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  a {
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--accent-ink) 40%, transparent);
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  code {
+    padding: 0.1em 0.35em;
+    border-radius: 0.35rem;
+    background: var(--surface-3);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--ink);
+  }
+
+  ul {
+    display: grid;
+    gap: 0.5rem;
+    padding-left: 1.2rem;
+    list-style: none;
+
+    li {
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -1rem;
+        top: 0.7em;
+        width: 0.35rem;
+        height: 0.35rem;
+        border-radius: 2px;
+        background: var(--accent-ink);
+        rotate: 45deg;
+      }
+    }
+  }
+}
+
+.info-footnote {
+  font-size: 0.9375rem;
+  color: var(--muted);
+
+  a {
+    color: var(--accent-ink);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--accent-ink) 40%, transparent);
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+// ── About ───────────────────────────────────────────────────────────────────
+
+.about-values {
+  display: grid;
+  gap: 1rem;
+  list-style: none;
+
+  @include up(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.about-value {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-bottom: 0.35rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklab, var(--accent-ink) 12%, var(--surface));
+    color: var(--accent-ink);
+  }
+
+  &__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  &__text {
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+
+    a {
+      color: var(--accent-ink);
+      text-decoration: underline;
+      text-decoration-color: color-mix(in oklab, var(--accent-ink) 40%, transparent);
+      text-underline-offset: 3px;
+
+      &:hover {
+        text-decoration-color: currentColor;
+      }
+    }
+  }
+}
+
+.about-cta {
+  display: grid;
+  gap: 1.25rem;
+  background:
+    radial-gradient(30rem 12rem at 0% 0%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%), var(--surface);
+
+  &__title {
+    font-size: 1.35rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+
+  &__text {
+    max-width: 36rem;
+    margin-top: 0.4rem;
+    color: var(--ink-2);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+}
+
+// ── Contact ─────────────────────────────────────────────────────────────────
+
+.contact-email {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem 1.25rem;
+
+  @include up(sm) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--accent-ink) 12%, var(--surface));
+    color: var(--accent-ink);
+  }
+
+  &__body {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  &__address {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 5px;
+
+    &:hover {
+      text-decoration-color: var(--accent-ink);
+    }
+  }
+
+  // On phones the button gets its own row under the address.
+  &__copy {
+    grid-column: 1 / -1;
+    justify-self: start;
+
+    @include up(sm) {
+      grid-column: auto;
+    }
+  }
+}
+
+.contact-ways {
+  display: grid;
+  gap: 1rem;
+
+  @include up(sm) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.contact-way {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--line-strong);
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: var(--surface);
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-bottom: 0.35rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-3);
+    color: var(--ink-2);
+  }
+
+  &__title {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+  }
+}
+
+// ── Legal ───────────────────────────────────────────────────────────────────
+
+// The legal basis after each item in the privacy policy.
+.info-basis {
+  color: var(--muted);
+}
+
+.cookie-choice {
+  display: grid;
+  gap: 1rem;
+  max-width: 42rem;
+
+  @include up(sm) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  &__status {
+    margin-top: 0.35rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+
+    .is-active {
+      border-color: var(--accent-ink);
+      background: color-mix(in oklab, var(--accent-ink) 10%, var(--surface));
+      color: var(--ink);
+    }
+  }
+}
+
+.cookie-list {
+  display: grid;
+  gap: 0.6rem;
+
+  &__item {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  dt code {
+    overflow-wrap: anywhere;
+  }
+
+  dd {
+    font-size: 0.9375rem;
+  }
+
+  &__lasts {
+    font-size: 0.8125rem !important;
+    color: var(--muted);
+  }
+}

@@ -165,6 +165,7 @@ Everything lives in one `.env` at the repository root (see `.env.example`):
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web Push reminders. Generate keys with `pnpm --filter @askesis/api vapid`. |
 | `VITE_SITE_URL`                                          | Public origin for canonical URLs, Open Graph and the sitemap.              |
 | `VITE_GITHUB_URL`, `VITE_PATREON_URL`                    | Links in the top bar and the support section.                              |
+| `VITE_CONTACT_EMAIL`                                     | The address on the contact page.                                           |
 
 Restart both servers after changing `.env`.
 

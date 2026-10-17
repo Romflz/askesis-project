@@ -370,6 +370,24 @@ $grades: (
   gap: 1.1rem;
 }
 
+// The terms line under the sign-up button.
+.auth-legal {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  text-align: center;
+
+  a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+}
+
 .auth-field {
   display: grid;
   gap: 0.45rem;

@@ -67,7 +67,7 @@ export function Toasts() {
         confetti({
           particleCount: 140,
           spread: 90,
-          origin: { x: 0.85, y: 0.9 },
+          origin: { x: 0.5, y: 0.15 },
           colors: BRAND,
           disableForReducedMotion: true,
         })
@@ -85,9 +85,9 @@ export function Toasts() {
               key={e.id}
               layout
               className={`toast toast--${e.type}`}
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.95 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -24, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 40, transition: { duration: 0.2 } }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -16, transition: { duration: 0.2 } }}
               transition={{ type: 'spring', stiffness: 420, damping: 30 }}
             >
               <span className="toast__icon">{c.icon}</span>

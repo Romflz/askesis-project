@@ -1,7 +1,7 @@
 // Head tags for public pages: title, description, canonical URL, Open Graph,
 // Twitter cards and JSON-LD. Private pages are noindex (see routes/_authed.tsx).
 
-import { GITHUB_URL } from './links.ts'
+import { CONTACT_EMAIL, GITHUB_URL } from './links.ts'
 
 export type LdJson = string | number | boolean | null | LdJson[] | { [key: string]: LdJson }
 
@@ -70,6 +70,7 @@ export const ORGANIZATION = {
   name: SITE_NAME,
   url: `${SITE_URL}/`,
   logo: absoluteUrl('/icons/icon-512.png'),
+  email: CONTACT_EMAIL,
   sameAs: [GITHUB_URL],
 }
 

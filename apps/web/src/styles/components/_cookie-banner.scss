@@ -1,0 +1,83 @@
+@use '../mixins' as *;
+
+// The cookie consent popup: a native modal <dialog>, centered over a dimmed page.
+
+.cookie-banner {
+  width: min(100% - 2rem, 26rem);
+  // Auto margins center the modal.
+  margin: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-pop);
+  animation: cookie-banner-in 260ms var(--ease-out);
+
+  // It takes focus when it opens; the ring belongs on the buttons inside.
+  &:focus {
+    outline: none;
+  }
+
+  &::backdrop {
+    background: color-mix(in oklab, #000 45%, transparent);
+    backdrop-filter: blur(4px);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklab, var(--accent-ink) 12%, var(--surface));
+    color: var(--accent-ink);
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  &__text {
+    margin-top: 0.9rem;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+
+    a {
+      color: var(--accent-ink);
+      font-weight: 500;
+      text-decoration: underline;
+      text-decoration-color: color-mix(in oklab, var(--accent-ink) 40%, transparent);
+      text-underline-offset: 3px;
+      white-space: nowrap;
+
+      &:hover {
+        text-decoration-color: currentColor;
+      }
+    }
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+}
+
+@keyframes cookie-banner-in {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+    scale: 0.98;
+  }
+}

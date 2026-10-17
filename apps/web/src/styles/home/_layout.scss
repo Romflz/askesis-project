@@ -92,6 +92,23 @@
       }
     }
   }
+
+  &__footer-text {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  &__footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem 1.25rem;
+
+    // Plain links here; the underline marks links inside sentences.
+    a {
+      text-decoration: none;
+    }
+  }
 }
 
 // Grid placement: column spans out of 12 at lg and out of 2 at md; one column below.

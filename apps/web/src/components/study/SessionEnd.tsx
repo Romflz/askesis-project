@@ -11,8 +11,9 @@ import { comboTier, type HistoryEntry } from './sessionState.ts'
 const RATING_COLORS = ['var(--c-again)', 'var(--c-hard)', 'var(--c-good)', 'var(--c-easy)']
 
 /** "45s", "12m 05s" or "1h 20m". */
+// Rounds down like the session bar's clock, so the two always agree.
 function duration(ms: number): string {
-  const s = Math.round(ms / 1000)
+  const s = Math.floor(ms / 1000)
   if (s < 60) return `${s}s`
   const m = Math.floor(s / 60)
   if (m < 60) return `${m}m ${String(s % 60).padStart(2, '0')}s`

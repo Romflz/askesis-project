@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router'
 import { ArrowRight, Lock, Mail, User } from 'lucide-react'
 import { useState } from 'react'
 import { AuthShell } from '../components/auth/AuthShell.tsx'
@@ -107,6 +107,18 @@ function Register() {
           {pending ? 'Creating account…' : 'Create account'}
           {!pending && <ArrowRight size={16} />}
         </SubmitButton>
+        {/* New tabs, so reading them doesn't lose what's typed in the form. */}
+        <p className="auth-legal">
+          By creating an account, you agree to the{' '}
+          <Link to="/terms" target="_blank">
+            terms
+          </Link>{' '}
+          and the{' '}
+          <Link to="/privacy" target="_blank">
+            privacy policy
+          </Link>
+          .
+        </p>
       </form>
     </AuthShell>
   )

@@ -1852,10 +1852,11 @@
 
 // ── Toasts ──────────────────────────────────────────────────────────────────
 
+// Top center, like the toasts on the dashboard and in the study session.
 .deckmgr-toasts {
   position: fixed;
   left: 50%;
-  bottom: 1.25rem;
+  top: calc(4.75rem + env(safe-area-inset-top));
   z-index: 70;
   display: grid;
   gap: 0.4rem;
@@ -1875,7 +1876,7 @@
   box-shadow: var(--shadow-pop);
   font-size: 0.875rem;
   pointer-events: auto;
-  animation: dlg-in 180ms var(--ease-out);
+  animation: deckmgr-toast-in 180ms var(--ease-out);
 
   > svg {
     flex-shrink: 0;
@@ -1894,6 +1895,14 @@
     display: grid;
     place-items: center;
     color: var(--muted);
+  }
+}
+
+// Drops in from above, since the stack sits at the top.
+@keyframes deckmgr-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
   }
 }
 
@@ -2556,10 +2565,6 @@
 @include down(md) {
   body:has(.tabbar) .deckmgr-bulk {
     bottom: calc(5rem + env(safe-area-inset-bottom));
-  }
-
-  body:has(.tabbar) .deckmgr-toasts {
-    bottom: calc(5.25rem + env(safe-area-inset-bottom));
   }
 }
 

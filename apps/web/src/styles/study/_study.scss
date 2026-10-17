@@ -2258,9 +2258,3 @@ $kinds: (
 .toast--study-info {
   --tone: var(--xp);
 }
-
-.study-toasts {
-  @include down(sm) {
-    bottom: 11rem;
-  }
-}

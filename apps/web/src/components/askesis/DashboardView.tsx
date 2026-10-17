@@ -1,7 +1,9 @@
 import type { SessionUser } from '@askesis/contracts'
 import { type Dashboard, formatDay, levelInfo } from '@askesis/core'
+import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { fmtInt } from '../../lib/format.ts'
+import { GITHUB_URL } from '../../lib/links.ts'
 import { ActivityHeatmap } from './ActivityHeatmap.tsx'
 import { ChestCard } from './ChestCard.tsx'
 import { DashboardMoments } from './DashboardMoments.tsx'
@@ -114,25 +116,38 @@ function Footer() {
   const { data } = useSession()
   return (
     <footer className="home__footer">
-      <span>
-        {data.isDemo ? (
-          'Free, open source and private: your cards stay yours.'
-        ) : data.totals.reviews > 0 ? (
-          <>
-            {fmtInt(data.totals.reviews)} reviews over {fmtInt(data.totals.daysStudied)} days since{' '}
-            {formatDay(data.totals.since, { month: 'long', year: 'numeric' })} · {fmtInt(data.totals.hours)} hours
-          </>
-        ) : (
-          'Your first review starts the history.'
-        )}
-      </span>
-      <span>
-        Open source spaced repetition. Scheduling by SM-2 or{' '}
-        <a href="https://github.com/open-spaced-repetition/ts-fsrs" target="_blank" rel="noreferrer">
-          FSRS
+      <div className="home__footer-text">
+        <span>
+          {data.isDemo ? (
+            'Free, open source and private: your cards stay yours.'
+          ) : data.totals.reviews > 0 ? (
+            <>
+              {fmtInt(data.totals.reviews)} reviews over {fmtInt(data.totals.daysStudied)} days since{' '}
+              {formatDay(data.totals.since, { month: 'long', year: 'numeric' })} · {fmtInt(data.totals.hours)} hours
+            </>
+          ) : (
+            'Your first review starts the history.'
+          )}
+        </span>
+        <span>
+          Open source spaced repetition. Scheduling by SM-2 or{' '}
+          <a href="https://github.com/open-spaced-repetition/ts-fsrs" target="_blank" rel="noreferrer">
+            FSRS
+          </a>
+          .
+        </span>
+      </div>
+      <nav className="home__footer-links" aria-label="Footer">
+        <Link to="/about">About</Link>
+        <Link to="/contact">Contact</Link>
+        <Link to="/docs">Docs</Link>
+        <a href={GITHUB_URL} target="_blank" rel="noreferrer">
+          GitHub
         </a>
-        .
-      </span>
+        <Link to="/terms">Terms</Link>
+        <Link to="/privacy">Privacy</Link>
+        <Link to="/cookies">Cookies</Link>
+      </nav>
     </footer>
   )
 }

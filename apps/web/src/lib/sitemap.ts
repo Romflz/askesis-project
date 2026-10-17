@@ -21,6 +21,11 @@ export function sitemapEntries(): SitemapEntry[] {
     { path: '/analytics', priority: 0.6, changefreq: 'monthly' },
     { path: '/docs', priority: 0.6, changefreq: 'monthly' },
     ...DOCS.map((d) => ({ path: `/docs/${d.slug}`, priority: 0.5, changefreq: 'monthly' as const })),
+    { path: '/about', priority: 0.5, changefreq: 'yearly' },
+    { path: '/contact', priority: 0.4, changefreq: 'yearly' },
+    { path: '/terms', priority: 0.2, changefreq: 'yearly' },
+    { path: '/privacy', priority: 0.2, changefreq: 'yearly' },
+    { path: '/cookies', priority: 0.2, changefreq: 'yearly' },
     { path: '/register', priority: 0.4, changefreq: 'yearly' },
   ]
 }
