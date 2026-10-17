@@ -5,7 +5,7 @@ scheduling (or FSRS), decks and subdecks, Anki imports that keep your progress, 
 ready, and a progression system that makes the daily habit stick: streaks, XP and levels, a daily chest, quests,
 trophies and real analytics.
 
-Version **1.0.0** · [License](#license) · Free for personal and community use · [Contributing](#contributing)
+Version **1.0.0** · [License](#license) · Free for personal and community use · [Contributing](#contributing) · [Roadmap](ROADMAP.md)
 
 ---
 
@@ -19,7 +19,7 @@ Version **1.0.0** · [License](#license) · Free for personal and community use 
   something is due.
 - **Progress you can feel.** Every answer earns XP; streaks have freezes; a daily chest gets better with your streak;
   six daily quests; 36 trophies; an analytics page with forecasts, true retention and your toughest cards.
-- **Free practice decks.** 84 public decks (4,200 cards) from Japanese, Spanish and Arabic to Java, Haskell and AWS,
+- **Free practice decks.** 96 public decks (4,800 cards) from Japanese, Spanish and Arabic to Java, Haskell, AWS and engineering,
   studyable without an account.
 - **Self-hostable.** One web app, one API, one Postgres. No tracking, no ads.
 
@@ -171,11 +171,31 @@ Restart both servers after changing `.env`.
 ## Self-hosting
 
 ```sh
-pnpm db:generate && pnpm db:migrate     # production: versioned migrations instead of push
+pnpm install
 pnpm build                              # builds apps/web/.output (Nitro)
-pnpm --filter @askesis/web start         # node .output/server/index.mjs
-pnpm --filter @askesis/api start         # the API runs TypeScript natively, no build step
+pnpm start                              # applies pending migrations, then starts the API and the web app
 ```
+
+Or run the two processes separately: `pnpm --filter @askesis/api start` (the API runs TypeScript natively, no build
+step) and `pnpm --filter @askesis/web start`.
+
+### Database changes and deploys
+
+Production never uses `db:push`. Schema changes ship as migrations that are applied on deploy:
+
+1. Change the schema in `packages/db/src/schema/` and try it locally with `pnpm db:push`.
+2. Before you push, run `pnpm db:generate`. It writes the SQL for the change to `packages/db/migrations/`; commit it
+   together with the schema change.
+3. On deploy, the API's `start` runs the migrations first (`packages/db/src/migrate.ts`), so `pnpm start` and
+   `pnpm --filter @askesis/api start` both bring the database up to date before serving:
+   - only migrations the database hasn't run yet are applied (they're tracked in `drizzle.__drizzle_migrations`), so it's
+     safe on every deploy;
+   - a lock makes instances that start at the same time wait for each other;
+   - if a migration fails, the API doesn't start, so new code never runs against an old schema.
+
+If your platform has a release or post-deploy command instead, run `pnpm db:migrate` there.
+
+### Production notes
 
 - Push notifications and service workers need **HTTPS** outside localhost.
 - Put a compressing reverse proxy (HTTP/2) in front of both processes.

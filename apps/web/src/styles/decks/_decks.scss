@@ -57,18 +57,11 @@
     gap: 0.5rem;
   }
 
+  // Library and tags across the top, the selected deck and its cards full width below.
   &__layout {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
-    align-items: start;
-
-    @include up(lg) {
-      grid-template-columns: 21.5rem minmax(0, 1fr);
-    }
-
-    @include up(xl) {
-      grid-template-columns: 23rem minmax(0, 1fr);
-    }
   }
 
   &__main {
@@ -123,19 +116,16 @@
 
   &__body {
     display: none;
-    // A fixed track: without it the column grows to the widest row (a long deck
-    // path or tag) and the whole sidebar scrolls sideways.
+    // Fixed tracks: without them a column grows to its widest row (a long deck
+    // path or tag) and the page scrolls sideways.
     grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
     margin-top: 0.75rem;
 
     @include up(lg) {
       display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
       margin-top: 0;
-      position: sticky;
-      top: 5rem;
-      max-height: calc(100dvh - 6rem);
-      overflow-y: auto;
     }
   }
 
@@ -191,6 +181,18 @@
 
     > li {
       min-width: 0;
+    }
+
+    // Wide screens: the tree flows down into columns, so the strip stays short.
+    @include up(lg) {
+      display: block;
+      columns: 3 16.5rem;
+      column-gap: 0.75rem;
+
+      > li {
+        break-inside: avoid;
+        margin-bottom: 2px;
+      }
     }
   }
 

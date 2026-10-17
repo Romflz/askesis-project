@@ -6,7 +6,13 @@ import { AWS_ESSENTIALS } from './aws-essentials.ts'
 import { BASH_SCRIPTING } from './bash-scripting.ts'
 import { CALCULUS } from './calculus.ts'
 import { CELL_BIOLOGY } from './cell-biology.ts'
+import { CHEMICAL_ENGINEERING_ADVANCED } from './chemical-engineering-advanced.ts'
+import { CHEMICAL_ENGINEERING_BASICS } from './chemical-engineering-basics.ts'
+import { CHEMICAL_ENGINEERING_INTERMEDIATE } from './chemical-engineering-intermediate.ts'
 import { CHEMISTRY } from './chemistry.ts'
+import { CIVIL_ENGINEERING_ADVANCED } from './civil-engineering-advanced.ts'
+import { CIVIL_ENGINEERING_BASICS } from './civil-engineering-basics.ts'
+import { CIVIL_ENGINEERING_INTERMEDIATE } from './civil-engineering-intermediate.ts'
 import { COMPUTER_SCIENCE } from './computer-science.ts'
 import { CPP } from './cpp.ts'
 import { CRYPTOGRAPHY } from './cryptography.ts'
@@ -16,6 +22,9 @@ import { DATA_ANALYSIS } from './data-analysis.ts'
 import { DESIGN_PATTERNS } from './design-patterns.ts'
 import { DOCKER } from './docker.ts'
 import { DSA } from './dsa.ts'
+import { ELECTRICAL_ENGINEERING_ADVANCED } from './electrical-engineering-advanced.ts'
+import { ELECTRICAL_ENGINEERING_BASICS } from './electrical-engineering-basics.ts'
+import { ELECTRICAL_ENGINEERING_INTERMEDIATE } from './electrical-engineering-intermediate.ts'
 import { ELIXIR } from './elixir.ts'
 import { ESPERANTO } from './esperanto.ts'
 import { FLUTTER } from './flutter.ts'
@@ -51,6 +60,9 @@ import { LINEAR_ALGEBRA } from './linear-algebra.ts'
 import { LINUX } from './linux.ts'
 import { MACHINE_LEARNING } from './machine-learning.ts'
 import { MANDARIN_HSK1 } from './mandarin-hsk1.ts'
+import { MECHANICAL_ENGINEERING_ADVANCED } from './mechanical-engineering-advanced.ts'
+import { MECHANICAL_ENGINEERING_BASICS } from './mechanical-engineering-basics.ts'
+import { MECHANICAL_ENGINEERING_INTERMEDIATE } from './mechanical-engineering-intermediate.ts'
 import { MONGODB } from './mongodb.ts'
 import { MORSE_CODE } from './morse-code.ts'
 import { NETWORKING } from './networking.ts'
@@ -185,6 +197,19 @@ export const PUBLIC_DECKS: PublicDeck[] = [
   STATISTICS,
   LINEAR_ALGEBRA,
   NUMBER_THEORY,
+  // Engineering: four fields, each from basics to advanced
+  MECHANICAL_ENGINEERING_BASICS,
+  MECHANICAL_ENGINEERING_INTERMEDIATE,
+  MECHANICAL_ENGINEERING_ADVANCED,
+  ELECTRICAL_ENGINEERING_BASICS,
+  ELECTRICAL_ENGINEERING_INTERMEDIATE,
+  ELECTRICAL_ENGINEERING_ADVANCED,
+  CIVIL_ENGINEERING_BASICS,
+  CIVIL_ENGINEERING_INTERMEDIATE,
+  CIVIL_ENGINEERING_ADVANCED,
+  CHEMICAL_ENGINEERING_BASICS,
+  CHEMICAL_ENGINEERING_INTERMEDIATE,
+  CHEMICAL_ENGINEERING_ADVANCED,
 ]
 
 /** The topics decks are grouped under, each with its landing-page copy. */
@@ -597,6 +622,42 @@ export const PUBLIC_CATEGORIES: PublicCategory[] = [
       {
         q: 'Which math topics are covered?',
         a: 'Single-variable calculus, introductory statistics and probability, linear algebra and elementary number theory. You can also write your own cards with LaTeX.',
+      },
+    ],
+  },
+  {
+    slug: 'engineering',
+    title: 'Engineering',
+    inlineTitle: 'engineering',
+    headline: 'Engineering flashcards: mechanical, electrical, civil and chemical, from basics to advanced',
+    description:
+      'Free engineering flashcards: mechanical, electrical, civil and chemical engineering at beginner, intermediate and advanced levels, with formulas in LaTeX.',
+    intro:
+      'Every engineering field rests on a core of laws, formulas and terms you need on demand, from free-body diagrams and Ohm’s law to soil mechanics and reactor design. These decks cover mechanical, electrical, civil and chemical engineering at three levels each, so you can start with the basics and work up to upper-level courses.',
+    benefits: [
+      {
+        title: 'Three levels per field',
+        text: 'Beginner, intermediate and advanced decks build on each other, from first-year concepts to upper-level courses.',
+      },
+      { title: 'Typeset formulas', text: 'Equations render with KaTeX, with a note on what the symbols mean and their units.' },
+      { title: 'Four disciplines', text: 'Mechanical, electrical, civil and chemical engineering, side by side.' },
+    ],
+    faq: [
+      {
+        q: 'Which engineering fields are covered?',
+        a: 'Mechanical, electrical, civil and chemical engineering, each with a beginner, an intermediate and an advanced deck of 50 cards.',
+      },
+      {
+        q: 'Where should I start?',
+        a: 'With the basics deck of your field. The intermediate decks assume first-year math and physics, and the advanced decks assume the core courses.',
+      },
+      {
+        q: 'Are flashcards enough to prepare for an engineering exam?',
+        a: 'They make definitions and formulas automatic. Pair them with worked problems, which is where exams test you.',
+      },
+      {
+        q: 'Is it free?',
+        a: 'Yes. You can practice every deck without an account; a free account keeps your progress and schedule.',
       },
     ],
   },

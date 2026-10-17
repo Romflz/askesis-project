@@ -7,7 +7,7 @@ import { useUserDataMutation } from '../../lib/queries.ts'
 import { importCards } from '../../server/library.functions.ts'
 import { DeckGlyph } from '../askesis/ui.tsx'
 
-export const LEVEL_LABEL = { beginner: 'Beginner', intermediate: 'Intermediate' } as const
+export const LEVEL_LABEL = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' } as const
 
 /** A deck tile linking to its landing page. */
 export function DeckTile({ deck }: { deck: DeckTileData }) {

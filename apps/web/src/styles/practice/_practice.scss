@@ -284,13 +284,24 @@
   gap: 1.25rem;
 
   @include up(lg) {
+    // Both columns end at the same height: the practice card grows, or the last side panel does.
     grid-template-columns: minmax(0, 1fr) 22rem;
-    align-items: start;
+  }
+}
+
+.practice-deck-drill {
+  display: flex;
+  flex-direction: column;
+
+  > .practice-drill {
+    flex: 1;
+    grid-template-rows: auto 1fr auto;
   }
 }
 
 .practice-deck-side {
   display: grid;
+  grid-template-rows: auto 1fr;
   gap: 1.25rem;
 }
 
@@ -389,6 +400,7 @@
 
 .practice-card {
   display: grid;
+  grid-template-rows: 1fr auto;
   gap: 1.25rem;
   padding: 1.25rem;
   border-radius: var(--radius-lg);
@@ -449,6 +461,8 @@
 
   &--done {
     justify-items: center;
+    align-content: center;
+    grid-template-rows: none;
     padding: 2.5rem 1.25rem;
     text-align: center;
   }
@@ -532,10 +546,15 @@
   color: var(--muted);
 }
 
+.practice-faq .practice-section-title {
+  text-align: center;
+}
+
 .practice-faq__list {
   display: grid;
   gap: 0.5rem;
   max-width: 52rem;
+  margin-inline: auto;
 }
 
 .practice-faq__item {

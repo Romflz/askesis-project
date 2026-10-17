@@ -17,6 +17,7 @@ export type PublicCategorySlug =
   | 'biology'
   | 'physics'
   | 'math'
+  | 'engineering'
 
 export interface PublicDeck {
   slug: string
@@ -24,7 +25,7 @@ export interface PublicDeck {
   /** For chips and breadcrumbs. */
   shortTitle: string
   category: PublicCategorySlug
-  level: 'beginner' | 'intermediate'
+  level: 'beginner' | 'intermediate' | 'advanced'
   icon: DeckIcon
   /** One or two sentences; used for meta descriptions. */
   description: string

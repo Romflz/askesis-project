@@ -21,6 +21,7 @@ import { Route as AuthedAccountRouteImport } from './routes/_authed/account'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedDecksRouteImport } from './routes/_authed/decks'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
+import { Route as AuthedShopRouteImport } from './routes/_authed/shop'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
 import { Route as DocsSlugRouteImport } from './routes/docs/$slug'
 import { Route as LearnIndexRouteImport } from './routes/learn/index'
@@ -90,6 +91,11 @@ const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedShopRoute = AuthedShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const DocsIndexRoute = DocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/decks': typeof AuthedDecksRoute
   '/settings': typeof AuthedSettingsRoute
+  '/shop': typeof AuthedShopRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/learn/$category': typeof LearnCategoryRoute
   '/practice/$slug': typeof PracticeSlugRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/decks': typeof AuthedDecksRoute
   '/settings': typeof AuthedSettingsRoute
+  '/shop': typeof AuthedShopRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/learn/$category': typeof LearnCategoryRoute
   '/practice/$slug': typeof PracticeSlugRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/decks': typeof AuthedDecksRoute
   '/_authed/settings': typeof AuthedSettingsRoute
+  '/_authed/shop': typeof AuthedShopRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/learn/$category': typeof LearnCategoryRoute
   '/practice/$slug': typeof PracticeSlugRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/decks'
     | '/settings'
+    | '/shop'
     | '/docs/$slug'
     | '/learn/$category'
     | '/practice/$slug'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/decks'
     | '/settings'
+    | '/shop'
     | '/docs/$slug'
     | '/learn/$category'
     | '/practice/$slug'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/_authed/decks'
     | '/_authed/settings'
+    | '/_authed/shop'
     | '/docs/$slug'
     | '/learn/$category'
     | '/practice/$slug'
@@ -378,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/shop': {
+      id: '/_authed/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof AuthedShopRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/docs/': {
       id: '/docs/'
       path: '/docs'
@@ -449,6 +468,7 @@ interface AuthedRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedDecksRoute: typeof AuthedDecksRoute
   AuthedSettingsRoute: typeof AuthedSettingsRoute
+  AuthedShopRoute: typeof AuthedShopRoute
   AuthedStudySessionRoute: typeof AuthedStudySessionRoute
   AuthedStudyIndexRoute: typeof AuthedStudyIndexRoute
 }
@@ -458,6 +478,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedDecksRoute: AuthedDecksRoute,
   AuthedSettingsRoute: AuthedSettingsRoute,
+  AuthedShopRoute: AuthedShopRoute,
   AuthedStudySessionRoute: AuthedStudySessionRoute,
   AuthedStudyIndexRoute: AuthedStudyIndexRoute,
 }

@@ -1,0 +1,53 @@
+@use '../mixins' as *;
+
+// Shop: a single "coming soon" panel for now.
+
+.shop-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1rem 6rem;
+
+  @include up(sm) {
+    padding: 5rem 1.5rem 6rem;
+  }
+}
+
+.shop-soon {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius);
+    background: color-mix(in oklab, var(--tier-gold) 16%, var(--surface));
+    color: var(--tier-gold);
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+  }
+
+  &__text {
+    max-width: 30rem;
+    color: var(--muted);
+  }
+
+  &__note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}

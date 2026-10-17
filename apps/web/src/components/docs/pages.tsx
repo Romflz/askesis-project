@@ -2641,7 +2641,9 @@ pnpm dev                      # web on :3000, API on :4000`}
       <H2 id="production">Production</H2>
       <ul>
         <li>
-          Use versioned migrations instead of push: <C>pnpm db:generate</C> then <C>pnpm db:migrate</C>.
+          Use versioned migrations instead of push: run <C>pnpm db:generate</C> with every schema change and commit the SQL in{' '}
+          <C>packages/db/migrations</C>. The API applies pending migrations each time it starts, so a deploy updates the database
+          by itself; <C>pnpm db:migrate</C> does the same on demand.
         </li>
         <li>
           <C>pnpm build</C> builds the web app with Nitro. Set <C>NITRO_PRESET</C> to target Node, Bun, Vercel, Netlify,

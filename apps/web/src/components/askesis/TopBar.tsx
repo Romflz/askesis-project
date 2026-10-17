@@ -310,9 +310,9 @@ export function TopBar({ user, stats }: { user: SessionUser | null; stats?: TopB
                   </span>
                 </span>
                 {stats.coins !== undefined && (
-                  <span className="topbar__pill topbar__pill--coins">
+                  <Link to="/shop" className="topbar__pill topbar__pill--coins" title="Shop · coming soon">
                     <CoinCount value={stats.coins} />
-                  </span>
+                  </Link>
                 )}
               </>
             )}

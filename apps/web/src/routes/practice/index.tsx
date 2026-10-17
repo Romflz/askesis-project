@@ -9,9 +9,9 @@ import { fmtInt } from '../../lib/format.ts'
 import { queries } from '../../lib/queries.ts'
 import { absoluteUrl, breadcrumbs, jsonLd, ORGANIZATION, seo } from '../../lib/seo.ts'
 
-const TITLE = 'Free flashcard decks: programming, web, databases, AI, DevOps, languages & science · Askesis'
+const TITLE = 'Free flashcard decks: programming, web, databases, AI, DevOps, languages, science & engineering · Askesis'
 const DESCRIPTION =
-  'Practice free spaced-repetition flashcards in your browser: JavaScript, Python, Java, React, SQL, system design, AWS, machine learning, Japanese, Spanish, chemistry and more. No signup needed.'
+  'Free flashcards in your browser, no signup: JavaScript, Python, React, SQL, AWS, machine learning, Japanese, Spanish, chemistry, engineering and more.'
 
 // The deck catalog. Public, indexable and fully server-rendered; the topic
 // filter is local state, so every deck is in the HTML for crawlers.

@@ -1,4 +1,5 @@
 import { CHEST_TIERS, CHEST_WEEK, type ChestTier } from '@askesis/core'
+import { Link } from '@tanstack/react-router'
 import clsx from 'clsx'
 import { Check, Clock, Gift, Snowflake } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
@@ -95,7 +96,15 @@ export function ChestCard() {
             {opened ? 'Opened today' : chest.weekly ? 'Weekly chest ready' : `${TIER_NAME[chest.tier]} chest ready`}
           </span>
         }
-        aside={<CoinCount value={coins} />}
+        aside={
+          guest ? (
+            <CoinCount value={coins} />
+          ) : (
+            <Link to="/shop" className="chest__shop" title="Shop · coming soon">
+              <CoinCount value={coins} />
+            </Link>
+          )
+        }
       />
 
       <div className="chest__stage">

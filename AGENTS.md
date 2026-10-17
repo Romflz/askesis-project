@@ -86,7 +86,8 @@ pnpm format              # Prettier (write); pnpm format:check to verify
 pnpm build               # production build of the web app
 pnpm db:up               # start Postgres in Docker
 pnpm db:push             # local development: push the Drizzle schema to the database
-pnpm db:generate && pnpm db:migrate   # production: versioned migrations
+pnpm db:generate         # after a schema change: write the migration (the API applies it on start)
+pnpm db:migrate          # apply pending migrations by hand
 pnpm --filter @askesis/api vapid       # generate Web Push keys
 pnpm --filter @askesis/api supporter <email> <0-3>
 pnpm --filter @askesis/web sitemap
@@ -113,7 +114,8 @@ pnpm --filter @askesis/web sitemap
 
 - Local development uses `pnpm db:push`. If push wants to drop or truncate data (for example to add a unique
   constraint), don't force it: make the change additive with SQL instead.
-- Production uses migrations (`pnpm db:generate`, `pnpm db:migrate`).
+- Production uses migrations: run `pnpm db:generate` with every schema change and commit the SQL. The API applies
+  pending migrations when it starts (`packages/db/src/migrate.ts`), so a deploy migrates the database by itself.
 - Every user-owned table references `user.id` with `on delete cascade`.
 
 ## Content

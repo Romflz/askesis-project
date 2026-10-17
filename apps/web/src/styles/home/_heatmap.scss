@@ -38,7 +38,10 @@
 
   &__scroll {
     overflow-x: auto;
-    padding-bottom: 0.25rem;
+    // Room for the enlarged active cell and its ring, so edge cells aren’t clipped and
+    // don’t add a scrollbar; the negative margin keeps the grid where it was.
+    padding: 0.5rem 0.5rem 0.75rem;
+    margin: -0.5rem -0.5rem -0.25rem;
   }
 
   &__frame {

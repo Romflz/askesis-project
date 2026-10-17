@@ -22,6 +22,15 @@
   }
 }
 
+// The chest card's balance links to the shop.
+.chest__shop {
+  border-radius: var(--radius-sm);
+
+  &:hover .coin-count {
+    color: var(--accent-ink);
+  }
+}
+
 .chest {
   --tier: #c47a3a;
   --tier-2: #8f5222;
